@@ -36,4 +36,27 @@ class ProductoValidatorTest {
             ProductoValidator.validarStock("-5")
         )
     }
+
+    @Test
+    fun precioCeroGeneraError() {
+        assertEquals(
+            "El precio debe ser mayor que cero",
+            ProductoValidator.validarPrecio("0")
+        )
+    }
+
+    @Test
+    fun stockConTextoGeneraError() {
+        assertEquals(
+            "El stock debe ser un número entero",
+            ProductoValidator.validarStock("abc")
+        )
+    }
+
+    @Test
+    fun stockCeroEsValido() {
+        assertNull(ProductoValidator.validarNombre("Loratadina"))
+        assertNull(ProductoValidator.validarPrecio("10"))
+        assertNull(ProductoValidator.validarStock("0"))
+    }
 }

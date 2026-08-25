@@ -48,6 +48,10 @@ fun ProductoScreen() {
         mutableStateOf<String?>(null)
     }
 
+    var intentoRegistrar by remember {
+        mutableStateOf(false)
+    }
+
     fun validarFormulario(): Boolean {
         nombreError = ProductoValidator.validarNombre(nombre)
         precioError = ProductoValidator.validarPrecio(precio)
@@ -68,39 +72,60 @@ fun ProductoScreen() {
 
         OutlinedTextField(
             value = nombre,
-            onValueChange = { nombre = it },
+            onValueChange = {
+                nombre = it
+                if (intentoRegistrar) {
+                    nombreError = ProductoValidator.validarNombre(it)
+                }
+            },
             label = {
                 Text("Nombre")
             },
-            isError = nombreError != null,
+            isError = intentoRegistrar && nombreError != null,
             supportingText = {
-                nombreError?.let { Text(it) }
+                if (intentoRegistrar) {
+                    nombreError?.let { Text(it) }
+                }
             },
             modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
             value = precio,
-            onValueChange = { precio = it },
+            onValueChange = {
+                precio = it
+                if (intentoRegistrar) {
+                    precioError = ProductoValidator.validarPrecio(it)
+                }
+            },
             label = {
                 Text("Precio")
             },
-            isError = precioError != null,
+            isError = intentoRegistrar && precioError != null,
             supportingText = {
-                precioError?.let { Text(it) }
+                if (intentoRegistrar) {
+                    precioError?.let { Text(it) }
+                }
             },
             modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
             value = stock,
-            onValueChange = { stock = it },
+            onValueChange = {
+                stock = it
+                if (intentoRegistrar) {
+                    stockError = ProductoValidator.validarStock(it)
+                }
+            },
             label = {
                 Text("Stock")
             },
-            isError = stockError != null,
+            isError = intentoRegistrar && stockError != null,
             supportingText = {
-                stockError?.let { Text(it) }
+                if (intentoRegistrar) {
+                    stockError?.let { Text(it) }
+                }
             },
             modifier = Modifier.fillMaxWidth()
         )
@@ -108,6 +133,7 @@ fun ProductoScreen() {
         Button(
             onClick = {
                 mensajeResultado = null
+                intentoRegistrar = true
 
                 if (validarFormulario()) {
                     val producto = Producto(
@@ -123,6 +149,7 @@ fun ProductoScreen() {
                     nombre = ""
                     precio = ""
                     stock = ""
+                    intentoRegistrar = false
                 }
             },
             modifier = Modifier.fillMaxWidth()
