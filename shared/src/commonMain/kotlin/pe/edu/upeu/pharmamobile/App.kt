@@ -47,10 +47,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import org.koin.compose.KoinContext
+import org.koin.compose.viewmodel.koinViewModel
 import pe.edu.upeu.pharmamobile.navigation.Screen
 import pe.edu.upeu.pharmamobile.presentation.cliente.ClienteScreen
 import pe.edu.upeu.pharmamobile.presentation.inicio.InicioScreen
 import pe.edu.upeu.pharmamobile.presentation.producto.ProductoScreen
+import pe.edu.upeu.pharmamobile.presentation.producto.ProductoViewModel
 import pe.edu.upeu.pharmamobile.theme.PharmaMobilTheme
 
 private const val COMPACT_MAX_WIDTH = 600
@@ -76,30 +79,32 @@ fun App() {
     var pantallaActual by remember { mutableStateOf<Screen>(Screen.Inicio) }
     var darkTheme by remember { mutableStateOf(false) }
 
-    PharmaMobilTheme(darkTheme = darkTheme) {
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            when {
-                maxWidth < COMPACT_MAX_WIDTH.dp -> CompactNavigation(
-                    pantallaActual = pantallaActual,
-                    onPantallaSeleccionada = { pantallaActual = it },
-                    darkTheme = darkTheme,
-                    onDarkThemeChange = { darkTheme = it }
-                )
+    KoinContext {
+        PharmaMobilTheme(darkTheme = darkTheme) {
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                when {
+                    maxWidth < COMPACT_MAX_WIDTH.dp -> CompactNavigation(
+                        pantallaActual = pantallaActual,
+                        onPantallaSeleccionada = { pantallaActual = it },
+                        darkTheme = darkTheme,
+                        onDarkThemeChange = { darkTheme = it }
+                    )
 
-                maxWidth < MEDIUM_MAX_WIDTH.dp -> MediumNavigation(
-                    availableWidth = maxWidth,
-                    pantallaActual = pantallaActual,
-                    onPantallaSeleccionada = { pantallaActual = it },
-                    darkTheme = darkTheme,
-                    onDarkThemeChange = { darkTheme = it }
-                )
+                    maxWidth < MEDIUM_MAX_WIDTH.dp -> MediumNavigation(
+                        availableWidth = maxWidth,
+                        pantallaActual = pantallaActual,
+                        onPantallaSeleccionada = { pantallaActual = it },
+                        darkTheme = darkTheme,
+                        onDarkThemeChange = { darkTheme = it }
+                    )
 
-                else -> ExpandedNavigation(
-                    pantallaActual = pantallaActual,
-                    onPantallaSeleccionada = { pantallaActual = it },
-                    darkTheme = darkTheme,
-                    onDarkThemeChange = { darkTheme = it }
-                )
+                    else -> ExpandedNavigation(
+                        pantallaActual = pantallaActual,
+                        onPantallaSeleccionada = { pantallaActual = it },
+                        darkTheme = darkTheme,
+                        onDarkThemeChange = { darkTheme = it }
+                    )
+                }
             }
         }
     }
@@ -246,7 +251,9 @@ private fun PharmaScaffold(
         ) {
             when (pantallaActual) {
                 Screen.Inicio -> InicioScreen()
-                Screen.Productos -> ProductoScreen()
+                Screen.Productos -> ProductoScreen(
+                    viewModel = koinViewModel<ProductoViewModel>()
+                )
                 Screen.Clientes -> ClienteScreen()
                 Screen.Pedidos -> Text(
                     text = "Pantalla de pedidos en construcción",
