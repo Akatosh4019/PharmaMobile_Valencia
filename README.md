@@ -1,13 +1,13 @@
-# PharmaMobil - sesión 7: cliente Ktor y GET de productos
+# PharmaMobil - cliente Ktor y gestión de productos
 
 Aplicación Kotlin Multiplatform con Compose, Clean Architecture y MVVM. En esta sesión, la pantalla de productos obtiene su listado del backend PharmaSoft mediante Ktor. Android y iOS comparten DTO, mapper, repositorio y ViewModel; cada plataforma aporta su motor HTTP y URL base.
 
 ## Requisitos y ejecución
 
-1. Iniciar PharmaSoft y Oracle. En el backend local de esta práctica: `mvn -DskipTests package` y `docker compose up -d --build`.
+1. Clonar [BackendPharmobile](https://github.com/Akatosh4019/BackendPharmobile) y, en esa carpeta, ejecutar `Copy-Item .env.example .env`, `mvn -DskipTests package` y `docker compose up -d --build`. Docker inicia Oracle y la API; el primer arranque de Oracle puede tardar varios minutos.
 2. Comprobar `http://localhost:8080/api/health` y `http://localhost:8080/api/v1/productos`. El segundo GET debe devolver 200 y un objeto con `contenido` no vacío.
 3. Abrir este proyecto en Android Studio y sincronizar Gradle.
-4. Iniciar un emulador Android y ejecutar la configuración `androidApp`. Para compilar sin emulador: `./gradlew :androidApp:assembleDebug` (en Windows, `./gradlew.bat`).
+4. Iniciar un emulador Android y ejecutar la configuración `androidApp`. Para compilar sin emulador: `./gradlew :androidApp:assembleDebug` (en Windows, `./gradlew.bat`). El backend debe seguir encendido mientras se usa la app.
 5. En macOS, abrir `iosApp` con Xcode para ejecutar el simulador iOS. No es posible verificar el simulador iOS desde Windows.
 
 La versión de Ktor fijada en `gradle/libs.versions.toml` es 3.5.2. Se usa en esta instalación porque Ktor 3.6.0 resolvió una dependencia OkHttp que exigía `compileSdk` 37, mientras el proyecto y su plugin Android compilan con 36.
@@ -27,7 +27,11 @@ PharmaSoft entrega una **página**, no una lista JSON simple. `PaginaProductosDt
 
 `ProductoApi` ejecuta el GET → `ProductoRepositorioRemoto` extrae `contenido` y mapea cada DTO a `Producto` del dominio → `ProductoViewModel` expone carga, lista, vacío o error → `ProductoScreen` muestra el resultado. El cliente HTTP es una sola instancia de Koin con ContentNegotiation, Logging (solo encabezados), HttpTimeout y DefaultRequest.
 
-El alta de productos desde el formulario **todavía se guarda en memoria**. No aparecerá en el listado remoto: el POST del formulario corresponde a la sesión 8. Para demostrar que el listado sí viene del backend, crea un producto con Swagger UI (`http://localhost:8080/swagger-ui.html`) y vuelve a entrar a la pantalla o pulsa **Actualizar lista**, sin recompilar.
+## Crear, editar y desactivar productos
+
+La pantalla de productos también consume `GET categorias`, `POST productos`, `PUT productos/{id}` y `DELETE productos/{id}`. Al crear se elige una categoría y se envían nombre, precio, stock y estado; **no se envía ID**, porque el backend lo genera. Editar precarga esos datos y permite reactivar un producto inactivo.
+
+En este backend, DELETE realiza una **baja lógica**: cambia `estado` a `false` y conserva el registro. La app pide confirmación antes de desactivar y luego muestra el producto en la pestaña Inactivos. Después de cada operación se vuelve a consultar el listado remoto. Es posible comprobarlo también desde Swagger UI (`http://localhost:8080/swagger-ui.html`).
 
 ## Verificaciones y evidencias para entregar
 

@@ -9,7 +9,6 @@ import org.koin.core.qualifier.named
 import pe.edu.upeu.pharmamobile.data.remote.ProductoApi
 import pe.edu.upeu.pharmamobile.data.remote.crearHttpClient
 import pe.edu.upeu.pharmamobile.data.repository.ProductoRepositorioRemoto
-import pe.edu.upeu.pharmamobile.data.repository.ProductoRepositorioEnMemoria
 import pe.edu.upeu.pharmamobile.domain.repository.ProductoRepository
 import pe.edu.upeu.pharmamobile.domain.usecase.RegistrarProductoUseCase
 import pe.edu.upeu.pharmamobile.presentation.producto.ProductoViewModel
@@ -17,8 +16,7 @@ import pe.edu.upeu.pharmamobile.presentation.producto.ProductoViewModel
 val repositoryModule = module {
     single { crearHttpClient(get(), get(named("apiBaseUrl"))) }
     single { ProductoApi(get()) }
-    single { ProductoRepositorioEnMemoria() }
-    single<ProductoRepository> { ProductoRepositorioRemoto(get(), get()) }
+    single<ProductoRepository> { ProductoRepositorioRemoto(get()) }
 }
 
 val useCaseModule = module {

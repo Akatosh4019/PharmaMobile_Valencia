@@ -9,4 +9,6 @@ fun ProductoDto.aDominio(): Producto = Producto(
     precio = precio,
     stock = stock,
     activo = estado,
+    categoriaId = categoriaId,
+    categoriaNombre = categoriaNombre,
 )

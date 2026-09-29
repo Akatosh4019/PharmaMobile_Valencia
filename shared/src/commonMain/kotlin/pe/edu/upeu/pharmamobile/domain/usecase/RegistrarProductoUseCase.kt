@@ -7,9 +7,10 @@ data class ErroresProducto(
     val nombre: String? = null,
     val precio: String? = null,
     val stock: String? = null,
+    val categoria: String? = null,
 ) {
     val tieneErrores: Boolean
-        get() = nombre != null || precio != null || stock != null
+        get() = nombre != null || precio != null || stock != null || categoria != null
 }
 
 class ProductoInvalidoException(
@@ -19,18 +20,23 @@ class ProductoInvalidoException(
 class RegistrarProductoUseCase(
     private val repository: ProductoRepository,
 ) {
-    fun validar(nombre: String, precio: String, stock: String): ErroresProducto {
+    fun validar(nombre: String, precio: String, stock: String, categoriaId: Long? = null): ErroresProducto {
         val precioNumerico = precio.toDoubleOrNull()
         val stockNumerico = stock.toIntOrNull()
 
         return ErroresProducto(
-            nombre = if (nombre.isBlank()) "El nombre es obligatorio" else null,
+            nombre = when {
+                nombre.isBlank() -> "El nombre es obligatorio"
+                nombre.trim().length !in 3..150 -> "El nombre debe tener entre 3 y 150 caracteres"
+                else -> null
+            },
             precio = when {
                 precio.isBlank() -> "El precio es obligatorio"
                 precioNumerico == null -> "El precio debe ser numérico"
-                precioNumerico <= 0 -> "El precio debe ser mayor que cero"
+                !precioNumerico.isFinite() || precioNumerico < 0.01 -> "El precio debe ser al menos 0.01"
                 else -> null
             },
+            categoria = if (categoriaId == null || categoriaId <= 0) "Selecciona una categoría" else null,
             stock = when {
                 stock.isBlank() -> "El stock es obligatorio"
                 stockNumerico == null -> "El stock debe ser un número entero"
@@ -44,8 +50,9 @@ class RegistrarProductoUseCase(
         nombre: String,
         precio: String,
         stock: String,
+        categoriaId: Long? = null,
     ): Result<Producto> {
-        val errores = validar(nombre, precio, stock)
+        val errores = validar(nombre, precio, stock, categoriaId)
         if (errores.tieneErrores) {
             return Result.failure(ProductoInvalidoException(errores))
         }
@@ -57,6 +64,7 @@ class RegistrarProductoUseCase(
                     nombre = nombre.trim(),
                     precio = precio.toDouble(),
                     stock = stock.toInt(),
+                    categoriaId = requireNotNull(categoriaId),
                 )
             )
         }

@@ -3,9 +3,11 @@ package pe.edu.upeu.pharmamobile.data
 import kotlinx.serialization.json.Json
 import pe.edu.upeu.pharmamobile.data.mapper.aDominio
 import pe.edu.upeu.pharmamobile.data.remote.dto.PaginaProductosDto
+import pe.edu.upeu.pharmamobile.data.remote.dto.ProductoRequestDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ProductoDtoTest {
     @Test
@@ -27,5 +29,13 @@ class ProductoDtoTest {
         val producto = pagina.contenido.single().aDominio()
         assertEquals("Amoxicilina", producto.nombre)
         assertFalse(producto.activo)
+    }
+
+    @Test
+    fun `la solicitud de producto lleva categoria y no lleva id`() {
+        val json = Json.encodeToString(ProductoRequestDto("Vitamina C", 12.5, 20, true, 1L))
+
+        assertTrue(json.contains("\"categoriaId\":1"))
+        assertFalse(json.contains("\"id\""))
     }
 }

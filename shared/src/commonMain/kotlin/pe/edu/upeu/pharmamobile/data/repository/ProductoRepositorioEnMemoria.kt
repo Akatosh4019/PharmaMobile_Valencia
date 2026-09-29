@@ -2,6 +2,7 @@ package pe.edu.upeu.pharmamobile.data.repository
 
 import kotlinx.coroutines.delay
 import pe.edu.upeu.pharmamobile.domain.model.Producto
+import pe.edu.upeu.pharmamobile.domain.model.Categoria
 import pe.edu.upeu.pharmamobile.domain.repository.ProductoRepository
 
 class ProductoRepositorioEnMemoria : ProductoRepository {
@@ -24,5 +25,20 @@ class ProductoRepositorioEnMemoria : ProductoRepository {
     override suspend fun listar(): List<Producto> {
         delay(500)
         return productos.toList()
+    }
+
+    override suspend fun listarCategorias(): List<Categoria> = listOf(Categoria(1L, "Medicamentos"))
+
+    override suspend fun actualizar(producto: Producto): Producto {
+        val indice = productos.indexOfFirst { it.id == producto.id }
+        require(indice >= 0) { "Producto no encontrado" }
+        productos[indice] = producto
+        return producto
+    }
+
+    override suspend fun eliminar(id: Long) {
+        val indice = productos.indexOfFirst { it.id == id }
+        require(indice >= 0) { "Producto no encontrado" }
+        productos[indice] = productos[indice].copy(activo = false)
     }
 }
