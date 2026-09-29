@@ -16,6 +16,7 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -29,6 +30,7 @@ import pe.edu.upeu.pharmamobile.presentation.components.ValidatedTextField
 @Composable
 fun ProductoScreen(viewModel: ProductoViewModel) {
     val uiState by viewModel.uiState.collectAsState()
+    LaunchedEffect(viewModel) { viewModel.alMostrarPantalla() }
     val formulario = uiState.formulario
     val filtros = ProductoFiltro.entries
     val titulos = listOf("Activos", "Inactivos", "Bajo stock")
@@ -71,6 +73,14 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 24.dp, bottom = 8.dp),
             )
+
+            Button(
+                onClick = viewModel::cargarProductos,
+                enabled = uiState.fase !is ProductoFase.Cargando,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            ) {
+                Text("Actualizar lista")
+            }
 
             PrimaryTabRow(selectedTabIndex = filtros.indexOf(uiState.filtro)) {
                 filtros.forEachIndexed { indice, filtro ->

@@ -16,9 +16,18 @@ class ProductoViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ProductoUiState())
     val uiState = _uiState.asStateFlow()
+    private var pantallaMostrada = false
 
     init {
         cargarProductos()
+    }
+
+    fun alMostrarPantalla() {
+        if (pantallaMostrada) {
+            cargarProductos()
+        } else {
+            pantallaMostrada = true
+        }
     }
 
     fun cambiarNombre(nombre: String) = actualizarFormulario(nombre = nombre)

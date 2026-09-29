@@ -27,7 +27,7 @@ PharmaSoft entrega una **página**, no una lista JSON simple. `PaginaProductosDt
 
 `ProductoApi` ejecuta el GET → `ProductoRepositorioRemoto` extrae `contenido` y mapea cada DTO a `Producto` del dominio → `ProductoViewModel` expone carga, lista, vacío o error → `ProductoScreen` muestra el resultado. El cliente HTTP es una sola instancia de Koin con ContentNegotiation, Logging (solo encabezados), HttpTimeout y DefaultRequest.
 
-El alta de productos desde el formulario **todavía se guarda en memoria**. No aparecerá en el listado remoto: el POST del formulario corresponde a la sesión 8. Para demostrar que el listado sí viene del backend, crea un producto con Swagger UI (`http://localhost:8080/swagger-ui.html`) y vuelve a entrar a la pantalla sin recompilar.
+El alta de productos desde el formulario **todavía se guarda en memoria**. No aparecerá en el listado remoto: el POST del formulario corresponde a la sesión 8. Para demostrar que el listado sí viene del backend, crea un producto con Swagger UI (`http://localhost:8080/swagger-ui.html`) y vuelve a entrar a la pantalla o pulsa **Actualizar lista**, sin recompilar.
 
 ## Verificaciones y evidencias para entregar
 

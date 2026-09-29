@@ -83,6 +83,24 @@ class ProductoViewModelTest {
         assertEquals(0, repository.llamadasARegistrar)
     }
 
+    @Test
+    fun alVolverAPantallaRecargaProductosDelRepositorio() = runTest(dispatcher.scheduler) {
+        val repository = ProductoRepositoryFalso(productosIniciales = emptyList())
+        val viewModel = crearViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.alMostrarPantalla()
+        assertEquals(1, repository.llamadasAListar)
+
+        repository.agregarProducto(Producto(10L, "Paracetamolado", 12.0, 23))
+        viewModel.alMostrarPantalla()
+        advanceUntilIdle()
+
+        assertEquals(2, repository.llamadasAListar)
+        val fase = assertIs<ProductoFase.ConProductos>(viewModel.uiState.value.fase)
+        assertEquals("Paracetamolado", fase.productos.single().nombre)
+    }
+
     private fun crearViewModel(repository: ProductoRepository): ProductoViewModel =
         ProductoViewModel(
             registrarProducto = RegistrarProductoUseCase(repository),
@@ -97,6 +115,12 @@ private class ProductoRepositoryFalso(
     private val productos = productosIniciales.toMutableList()
     var llamadasARegistrar: Int = 0
         private set
+    var llamadasAListar: Int = 0
+        private set
+
+    fun agregarProducto(producto: Producto) {
+        productos.add(producto)
+    }
 
     override suspend fun registrar(producto: Producto): Producto {
         llamadasARegistrar++
@@ -106,6 +130,7 @@ private class ProductoRepositoryFalso(
     }
 
     override suspend fun listar(): List<Producto> {
+        llamadasAListar++
         errorAlListar?.let { error(it) }
         return productos.toList()
     }
