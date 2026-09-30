@@ -59,6 +59,7 @@ def styles():
 
 
 def p(text: str, sty="BodyS07"):
+    text = text.replace("—", "-").replace("–", "-").replace("·", "-").replace("→", "a")
     return Paragraph(text, STYLES[sty])
 
 
@@ -101,7 +102,7 @@ def page(canvas, doc):
     canvas.line(1.7 * cm, 1.3 * cm, w - 1.7 * cm, 1.3 * cm)
     canvas.setFillColor(GREY)
     canvas.setFont("ArialS07", 7)
-    canvas.drawString(1.7 * cm, 0.9 * cm, "Valencia Saavedra · Desarrollo de Aplicaciones Móviles · 2026-2")
+    canvas.drawString(1.7 * cm, 0.9 * cm, "Valencia Saavedra - Desarrollo de Aplicaciones Móviles - 2026-2")
     canvas.drawRightString(w - 1.7 * cm, 0.9 * cm, f"Página {doc.page}")
     canvas.restoreState()
 
@@ -249,14 +250,14 @@ def make_report(student: str, commit: str):
         ("04_timeout_app.png", "Evidencia 04B. Interfaz abierta con error de timeout.", 10.0 * cm)])
 
     scenario("3.5 Prueba 05 · Campo JSON desconocido", [
-        ("Fecha / plataforma", "29/09/2026, 21:59; Android Emulator API 37.1."),
+        ("Fecha / plataforma", "29/09/2026, 20:59; Android Emulator API 37.1."),
         ("Pasos", "Cambiar temporalmente ignoreUnknownKeys de true a false, ejecutar de nuevo y actualizar la lista. Después restaurar true."),
         ("Esperado", "Con false, excepción de serialización; con true, lectura normal."),
         ("Observado", "El backend responde HTTP 200, pero Ktor registra JsonConvertException: categoria contiene descripcion y producto contiene fechaCreacion, campos no declarados en los DTO. Con true se obtuvo la lista en la prueba 01."),
         ("Qué ve el usuario", "Error técnico «Encountered an unknown key»; la app no se cierra."),
         ("Conclusión", "Se verificó la necesidad de ignorar campos adicionales en este contrato."),
-    ], [("05_json_logcat.png", "Evidencia 05A. HTTP 200 seguido del fallo de deserialización.", 10.0 * cm),
-        ("05_json_app.png", "Evidencia 05B. Error visible para el usuario.", 9.5 * cm)])
+    ], [("05_json_logcat.png", "Evidencia 05A. HTTP 200 seguido del fallo de deserialización.", 8.5 * cm),
+        ("05_json_app.png", "Evidencia 05B. Error visible para el usuario.", 8.2 * cm)])
 
     # Referencias y cierre.
     story += [p("4. Repositorio, configuración final y conclusiones", "SectionS07"),
