@@ -12,7 +12,7 @@ Aplicación Kotlin Multiplatform con Compose, Clean Architecture y MVVM. En esta
 
 La versión de Ktor fijada en `gradle/libs.versions.toml` es 3.5.2. Se usa en esta instalación porque Ktor 3.6.0 resolvió una dependencia OkHttp que exigía `compileSdk` 37, mientras el proyecto y su plugin Android compilan con 36.
 
-## URL y endpoint
+## Conectividad REST
 
 | Plataforma | URL base local | Motor |
 | --- | --- | --- |
@@ -20,6 +20,10 @@ La versión de Ktor fijada en `gradle/libs.versions.toml` es 3.5.2. Se usa en es
 | iOS Simulator | `http://localhost:8080/api/v1/` | Darwin |
 
 La petición de la sesión es `GET productos?pagina=0&tamanio=20`. `10.0.2.2` representa la computadora anfitriona desde el emulador Android. El permiso `INTERNET` y las excepciones de tráfico HTTP en Android/iOS se limitan al backend local; en producción debe usarse HTTPS.
+
+El cliente Ktor se configura en `shared/src/commonMain/kotlin/pe/edu/upeu/pharmamobile/data/remote/HttpClientFactory.kt`: `ContentNegotiation` deserializa JSON con `ignoreUnknownKeys = true`, `expectSuccess = true` convierte respuestas HTTP 4xx/5xx en excepciones y `HttpTimeout` limita la petición a 15 segundos. En Android, los registros de petición y respuesta se encuentran en Logcat con el filtro `tag:PharmaMobilHTTP`. La API se encapsula en `ProductoApi` y se transforma a modelos de dominio mediante `ProductoRepositorioRemoto`.
+
+La evidencia de la sesión 7 autónoma está en `evidencias/s07_autonoma/`. Allí se documentan GET 200, recurso inexistente 404, pérdida y recuperación de conexión, timeout de 1 ms y rechazo de campos JSON desconocidos con `ignoreUnknownKeys = false`. Las modificaciones temporales empleadas para 404, timeout y JSON desconocido se restauraron; la configuración entregada usa la ruta normal, 15 segundos e `ignoreUnknownKeys = true`. La prueba de 404 mostró una excepción capturada pero un mensaje técnico sin simplificar en la interfaz; la captura registra ese resultado real.
 
 ## Contrato JSON y recorrido de datos
 
