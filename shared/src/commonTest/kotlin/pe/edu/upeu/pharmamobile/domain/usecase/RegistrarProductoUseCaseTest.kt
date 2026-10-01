@@ -80,6 +80,8 @@ private class ProductoRepositoryFalso : ProductoRepository {
 
     override suspend fun listar(): List<Producto> = productos.toList()
 
+    override suspend fun obtener(id: Long): Producto = productos.first { it.id == id }
+
     override suspend fun listarCategorias(): List<Categoria> = listOf(Categoria(1L, "Medicamentos"))
 
     override suspend fun actualizar(producto: Producto): Producto = producto

@@ -24,6 +24,8 @@ class ProductoRepositorioRemoto(
         return api.crear(producto.aRequest()).aDominio()
     }
 
+    override suspend fun obtener(id: Long): Producto = api.obtener(id).aDominio()
+
     override suspend fun listarCategorias(): List<Categoria> =
         api.obtenerCategorias().map { Categoria(it.id, it.nombre) }
 

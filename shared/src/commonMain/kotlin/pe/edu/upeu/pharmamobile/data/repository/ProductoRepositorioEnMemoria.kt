@@ -27,6 +27,9 @@ class ProductoRepositorioEnMemoria : ProductoRepository {
         return productos.toList()
     }
 
+    override suspend fun obtener(id: Long): Producto =
+        productos.firstOrNull { it.id == id } ?: error("Producto no encontrado")
+
     override suspend fun listarCategorias(): List<Categoria> = listOf(Categoria(1L, "Medicamentos"))
 
     override suspend fun actualizar(producto: Producto): Producto {

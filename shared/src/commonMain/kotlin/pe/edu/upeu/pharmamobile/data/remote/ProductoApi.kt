@@ -23,6 +23,8 @@ class ProductoApi(private val client: HttpClient) {
 
     suspend fun obtenerCategorias(): List<CategoriaDto> = client.get("categorias").body()
 
+    suspend fun obtener(id: Long): ProductoDto = client.get("productos/$id").body()
+
     suspend fun crear(request: ProductoRequestDto): ProductoDto =
         client.post("productos") { setBody(request) }.body()
 

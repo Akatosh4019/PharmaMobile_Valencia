@@ -14,12 +14,14 @@ data class ProductoDto(
 )
 
 @Serializable
-data class PaginaProductosDto(
-    val contenido: List<ProductoDto>,
+data class PaginaResponseDto<T>(
+    val contenido: List<T>,
     val pagina: Int,
     val tamanio: Int,
     val totalElementos: Long,
     val totalPaginas: Int,
     val ultima: Boolean,
 )
+
+typealias PaginaProductosDto = PaginaResponseDto<ProductoDto>
 
