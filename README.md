@@ -46,3 +46,11 @@ En este backend, DELETE realiza una **baja lógica**: cambia `estado` a `false` 
 - Enlace a la rama `feature/ktor-client-valencia` con al menos tres commits descriptivos de la sesión.
 
 Pruebas locales: `./gradlew.bat :shared:testAndroidHostTest :androidApp:assembleDebug`. El test de DTO verifica la deserialización paginada y el de ViewModel cubre lista, vacío y error. Si el docente dispensa iOS por trabajar en Windows, conviene indicarlo expresamente en la entrega; esta rama no incluye evidencia iOS verificada.
+
+## Sesión 8 - CRUD y errores controlados
+
+La rama `feature/crud-productos-valencia` amplía `ProductoRepository` con `obtener(id)` y utiliza un DTO genérico de paginación. `ProductoApi` encapsula GET, POST, PUT y DELETE; DELETE no intenta leer un cuerpo del `204 No Content`. Los casos de uso de obtener, registrar, actualizar y eliminar están registrados en Koin.
+
+`data/remote/EjecutarLlamada.kt` es el único punto que convierte respuestas 400/404/409/5xx, timeout y pérdida de conexión en `domain/error/ErrorApi`. La capa `presentation` solo conoce estos errores del dominio. `ProductoUiState` distingue la fase de la lista de la operación de guardar o desactivar; un guardado no oculta los productos visibles. Si el backend responde 400 con `validationErrors`, los mensajes se muestran debajo de los campos correspondientes.
+
+Para evidenciar el 400 pedido en la guía, con PharmaSoft activo abre la app, escribe `AB` en Nombre, un precio y stock válidos, selecciona una categoría y pulsa Crear producto. La longitud del nombre se valida en el servidor; el texto de `validationErrors.nombre` debe aparecer bajo Nombre. Filtra Logcat con `tag:PharmaMobilHTTP` para capturar la petición POST y el `400`. Después usa un nombre de tres o más caracteres para probar un `201` y realiza una actualización y una desactivación. La baja es lógica: el producto pasa a Inactivos. El emulador es gestionado por el usuario; las capturas visuales de esta sesión aún deben tomarse en Android.

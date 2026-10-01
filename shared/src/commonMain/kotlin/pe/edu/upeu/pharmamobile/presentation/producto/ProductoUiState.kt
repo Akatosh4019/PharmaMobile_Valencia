@@ -10,6 +10,14 @@ sealed interface ProductoFase {
     data class Error(val mensaje: String) : ProductoFase
 }
 
+sealed interface ProductoOperacion {
+    data object Inactiva : ProductoOperacion
+    data class EnCurso(val tipo: Tipo) : ProductoOperacion
+    data class Fallida(val mensaje: String) : ProductoOperacion
+
+    enum class Tipo { CREAR, ACTUALIZAR, DESACTIVAR }
+}
+
 enum class ProductoFiltro {
     ACTIVOS,
     INACTIVOS,
@@ -35,12 +43,15 @@ data class ProductoUiState(
     val productos: List<Producto> = emptyList(),
     val formulario: ProductoFormularioUiState = ProductoFormularioUiState(),
     val categorias: List<Categoria> = emptyList(),
-    val operando: Boolean = false,
+    val operacion: ProductoOperacion = ProductoOperacion.Inactiva,
     val productoPendienteEliminar: Producto? = null,
     val mensajeError: String? = null,
     val mensajeResultado: String? = null,
     val filtro: ProductoFiltro = ProductoFiltro.ACTIVOS,
 ) {
+    val operando: Boolean
+        get() = operacion is ProductoOperacion.EnCurso
+
     val productosFiltrados: List<Producto>
         get() = productos.filter { producto ->
             when (filtro) {

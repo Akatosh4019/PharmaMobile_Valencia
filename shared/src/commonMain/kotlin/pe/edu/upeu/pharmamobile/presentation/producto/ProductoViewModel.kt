@@ -2,17 +2,25 @@ package pe.edu.upeu.pharmamobile.presentation.producto
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pe.edu.upeu.pharmamobile.domain.model.Producto
+import pe.edu.upeu.pharmamobile.domain.error.ErrorApi
+import pe.edu.upeu.pharmamobile.domain.error.ErrorApiException
+import pe.edu.upeu.pharmamobile.domain.error.mensajeUsuario
 import pe.edu.upeu.pharmamobile.domain.repository.ProductoRepository
 import pe.edu.upeu.pharmamobile.domain.usecase.RegistrarProductoUseCase
+import pe.edu.upeu.pharmamobile.domain.usecase.ActualizarProductoUseCase
+import pe.edu.upeu.pharmamobile.domain.usecase.EliminarProductoUseCase
 
 class ProductoViewModel(
     private val registrarProducto: RegistrarProductoUseCase,
     private val repository: ProductoRepository,
+    private val actualizarProducto: ActualizarProductoUseCase,
+    private val eliminarProducto: EliminarProductoUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ProductoUiState())
     val uiState = _uiState.asStateFlow()
@@ -50,12 +58,13 @@ class ProductoViewModel(
                 ),
                 mensajeResultado = null,
                 mensajeError = null,
+                operacion = ProductoOperacion.Inactiva,
             )
         }
     }
 
     fun cancelarEdicion() {
-        _uiState.update { it.copy(formulario = ProductoFormularioUiState(), mensajeError = null) }
+        _uiState.update { it.copy(formulario = ProductoFormularioUiState(), mensajeError = null, operacion = ProductoOperacion.Inactiva) }
     }
 
     fun registrar() = guardar()
@@ -79,7 +88,8 @@ class ProductoViewModel(
             return
         }
 
-        _uiState.update { it.copy(operando = true, mensajeError = null, mensajeResultado = null) }
+        val tipo = if (formulario.editandoId == null) ProductoOperacion.Tipo.CREAR else ProductoOperacion.Tipo.ACTUALIZAR
+        _uiState.update { it.copy(operacion = ProductoOperacion.EnCurso(tipo), mensajeError = null, mensajeResultado = null) }
         viewModelScope.launch {
             runCatching {
                 val categoriaId = requireNotNull(formulario.categoriaId)
@@ -88,20 +98,20 @@ class ProductoViewModel(
                         formulario.nombre, formulario.precio, formulario.stock, categoriaId,
                     ).getOrThrow()
                 } else {
-                    repository.actualizar(Producto(
+                    actualizarProducto(Producto(
                         id = formulario.editandoId,
                         nombre = formulario.nombre.trim(),
                         precio = formulario.precio.toDouble(),
                         stock = formulario.stock.toInt(),
                         activo = formulario.activo,
                         categoriaId = categoriaId,
-                    ))
+                    )).getOrThrow()
                 }
             }.onSuccess { producto ->
                 _uiState.update {
                     it.copy(
                         formulario = ProductoFormularioUiState(),
-                        operando = false,
+                        operacion = ProductoOperacion.Inactiva,
                         mensajeResultado = if (formulario.editandoId == null) {
                             "Producto ${producto.nombre} creado en el servidor"
                         } else {
@@ -110,11 +120,9 @@ class ProductoViewModel(
                         filtro = if (!producto.activo) ProductoFiltro.INACTIVOS else ProductoFiltro.ACTIVOS,
                     )
                 }
-                cargarProductos()
+                recargarProductos(conservarListado = true)
             }.onFailure { error ->
-                _uiState.update {
-                    it.copy(operando = false, mensajeError = error.message ?: "No se pudo guardar el producto")
-                }
+                manejarFallo(error)
             }
         }
     }
@@ -130,19 +138,17 @@ class ProductoViewModel(
     fun confirmarEliminar() {
         val producto = _uiState.value.productoPendienteEliminar ?: return
         if (_uiState.value.operando) return
-        _uiState.update { it.copy(productoPendienteEliminar = null, operando = true, mensajeError = null) }
+        _uiState.update { it.copy(productoPendienteEliminar = null, operacion = ProductoOperacion.EnCurso(ProductoOperacion.Tipo.DESACTIVAR), mensajeError = null) }
         viewModelScope.launch {
-            runCatching { repository.eliminar(producto.id) }
+            eliminarProducto(producto.id)
                 .onSuccess {
                     _uiState.update {
-                        it.copy(operando = false, mensajeResultado = "${producto.nombre} desactivado", filtro = ProductoFiltro.INACTIVOS)
+                        it.copy(operacion = ProductoOperacion.Inactiva, mensajeResultado = "${producto.nombre} desactivado", filtro = ProductoFiltro.INACTIVOS)
                     }
-                    cargarProductos()
+                    recargarProductos(conservarListado = true)
                 }
                 .onFailure { error ->
-                    _uiState.update {
-                        it.copy(operando = false, mensajeError = error.message ?: "No se pudo desactivar el producto")
-                    }
+                    manejarFallo(error)
                 }
         }
     }
@@ -152,13 +158,18 @@ class ProductoViewModel(
             runCatching { repository.listarCategorias() }
                 .onSuccess { categorias -> _uiState.update { it.copy(categorias = categorias) } }
                 .onFailure { error ->
-                    _uiState.update { it.copy(mensajeError = error.message ?: "No se pudieron cargar las categorías") }
+                    if (error is CancellationException) throw error
+                    _uiState.update { it.copy(mensajeError = mensajeDe(error)) }
                 }
         }
     }
 
-    fun cargarProductos() {
-        _uiState.update { it.copy(fase = ProductoFase.Cargando) }
+    fun cargarProductos() = recargarProductos(conservarListado = false)
+
+    private fun recargarProductos(conservarListado: Boolean) {
+        if (!conservarListado || _uiState.value.fase !is ProductoFase.ConProductos) {
+            _uiState.update { it.copy(fase = ProductoFase.Cargando) }
+        }
         viewModelScope.launch {
             runCatching { repository.listar() }
                 .onSuccess { productos ->
@@ -170,12 +181,45 @@ class ProductoViewModel(
                     }
                 }
                 .onFailure { error ->
+                    if (error is CancellationException) throw error
                     _uiState.update {
-                        it.copy(fase = ProductoFase.Error(error.message ?: "No se pudieron cargar los productos"))
+                        if (conservarListado && it.fase is ProductoFase.ConProductos) {
+                            it.copy(mensajeError = mensajeDe(error))
+                        } else {
+                            it.copy(fase = ProductoFase.Error(mensajeDe(error)))
+                        }
                     }
                 }
         }
     }
+
+    private fun manejarFallo(fallo: Throwable) {
+        if (fallo is CancellationException) throw fallo
+        val error = (fallo as? ErrorApiException)?.error
+        if (error is ErrorApi.Validacion) {
+            _uiState.update { actual ->
+                actual.copy(
+                    operacion = ProductoOperacion.Inactiva,
+                    formulario = actual.formulario.copy(
+                        nombreError = error.porCampo["nombre"],
+                        precioError = error.porCampo["precio"],
+                        stockError = error.porCampo["stock"],
+                        categoriaError = error.porCampo["categoriaId"],
+                        intentoGuardar = true,
+                    ),
+                    mensajeError = if (error.porCampo.isEmpty()) error.mensajeUsuario() else null,
+                )
+            }
+        } else {
+            _uiState.update {
+                it.copy(operacion = ProductoOperacion.Fallida(mensajeDe(fallo)), mensajeError = null)
+            }
+        }
+    }
+
+    private fun mensajeDe(fallo: Throwable): String =
+        (fallo as? ErrorApiException)?.error?.mensajeUsuario()
+            ?: fallo.message ?: "No se pudo completar la operación"
 
     private fun actualizarFormulario(
         nombre: String = _uiState.value.formulario.nombre,
@@ -199,6 +243,7 @@ class ProductoViewModel(
                     categoriaError = errores?.categoria,
                 ),
                 mensajeError = null,
+                operacion = if (it.operacion is ProductoOperacion.Fallida) ProductoOperacion.Inactiva else it.operacion,
             )
         }
     }

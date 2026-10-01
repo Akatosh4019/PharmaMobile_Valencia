@@ -9,8 +9,12 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import pe.edu.upeu.pharmamobile.domain.model.Producto
 import pe.edu.upeu.pharmamobile.domain.model.Categoria
+import pe.edu.upeu.pharmamobile.domain.error.ErrorApi
+import pe.edu.upeu.pharmamobile.domain.error.ErrorApiException
 import pe.edu.upeu.pharmamobile.domain.repository.ProductoRepository
 import pe.edu.upeu.pharmamobile.domain.usecase.RegistrarProductoUseCase
+import pe.edu.upeu.pharmamobile.domain.usecase.ActualizarProductoUseCase
+import pe.edu.upeu.pharmamobile.domain.usecase.EliminarProductoUseCase
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -122,6 +126,45 @@ class ProductoViewModelTest {
     }
 
     @Test
+    fun validacion400DelServidorSeMuestraDebajoDeNombre() = runTest(dispatcher.scheduler) {
+        val repository = ProductoRepositoryFalso(
+            errorAlRegistrar = ErrorApiException(
+                ErrorApi.Validacion(mapOf("nombre" to "El nombre debe tener entre 3 y 150 caracteres"))
+            )
+        )
+        val viewModel = crearViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.cambiarNombre("AB")
+        viewModel.cambiarPrecio("12.50")
+        viewModel.cambiarStock("20")
+        viewModel.cambiarCategoria(1L)
+        viewModel.guardar()
+        assertIs<ProductoOperacion.EnCurso>(viewModel.uiState.value.operacion)
+        advanceUntilIdle()
+
+        assertEquals(1, repository.llamadasARegistrar)
+        assertEquals("El nombre debe tener entre 3 y 150 caracteres", viewModel.uiState.value.formulario.nombreError)
+        assertIs<ProductoOperacion.Inactiva>(viewModel.uiState.value.operacion)
+    }
+
+    @Test
+    fun crearNoOcultaListadoMientrasSeGuarda() = runTest(dispatcher.scheduler) {
+        val producto = Producto(1L, "Paracetamol", 15.5, 100, categoriaId = 1L)
+        val viewModel = crearViewModel(ProductoRepositoryFalso(productosIniciales = listOf(producto)))
+        advanceUntilIdle()
+
+        viewModel.cambiarNombre("Vitamina C")
+        viewModel.cambiarPrecio("12.50")
+        viewModel.cambiarStock("20")
+        viewModel.cambiarCategoria(1L)
+        viewModel.guardar()
+
+        assertIs<ProductoFase.ConProductos>(viewModel.uiState.value.fase)
+        assertIs<ProductoOperacion.EnCurso>(viewModel.uiState.value.operacion)
+    }
+
+    @Test
     fun editarYReactivarProductoActualizaRepositorio() = runTest(dispatcher.scheduler) {
         val original = Producto(2L, "Loratadina", 10.0, 0, activo = false, categoriaId = 1L)
         val repository = ProductoRepositoryFalso(productosIniciales = listOf(original))
@@ -159,12 +202,15 @@ class ProductoViewModelTest {
         ProductoViewModel(
             registrarProducto = RegistrarProductoUseCase(repository),
             repository = repository,
+            actualizarProducto = ActualizarProductoUseCase(repository),
+            eliminarProducto = EliminarProductoUseCase(repository),
         )
 }
 
 private class ProductoRepositoryFalso(
     productosIniciales: List<Producto> = emptyList(),
     private val errorAlListar: String? = null,
+    private val errorAlRegistrar: Throwable? = null,
 ) : ProductoRepository {
     private val productos = productosIniciales.toMutableList()
     var llamadasARegistrar: Int = 0
@@ -180,6 +226,7 @@ private class ProductoRepositoryFalso(
 
     override suspend fun registrar(producto: Producto): Producto {
         llamadasARegistrar++
+        errorAlRegistrar?.let { throw it }
         val registrado = producto.copy(id = (productos.maxOfOrNull { it.id } ?: 0L) + 1L)
         productos.add(registrado)
         return registrado

@@ -27,7 +27,6 @@ class RegistrarProductoUseCase(
         return ErroresProducto(
             nombre = when {
                 nombre.isBlank() -> "El nombre es obligatorio"
-                nombre.trim().length !in 3..150 -> "El nombre debe tener entre 3 y 150 caracteres"
                 else -> null
             },
             precio = when {

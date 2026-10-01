@@ -43,6 +43,9 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(viewModel) { viewModel.alMostrarPantalla() }
     val formulario = uiState.formulario
+    val tipoOperacion = (uiState.operacion as? ProductoOperacion.EnCurso)?.tipo
+    val guardando = tipoOperacion == ProductoOperacion.Tipo.CREAR ||
+        tipoOperacion == ProductoOperacion.Tipo.ACTUALIZAR
     val filtros = ProductoFiltro.entries
     val titulos = listOf("Activos", "Inactivos", "Bajo stock")
     val listState = rememberLazyListState()
@@ -81,7 +84,7 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
             Box(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
                 OutlinedButton(
                     onClick = { categoriasAbiertas = true },
-                    enabled = uiState.categorias.isNotEmpty() && !uiState.operando,
+                    enabled = uiState.categorias.isNotEmpty() && !guardando,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(uiState.categorias.firstOrNull { it.id == formulario.categoriaId }?.nombre ?: "Seleccionar categoría")
@@ -110,7 +113,7 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
                     Checkbox(
                         checked = formulario.activo,
                         onCheckedChange = viewModel::cambiarActivo,
-                        enabled = !uiState.operando,
+                        enabled = !guardando,
                     )
                     Text("Producto activo")
                 }
@@ -118,19 +121,23 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
 
             Button(
                 onClick = viewModel::guardar,
-                enabled = !uiState.operando && uiState.categorias.isNotEmpty(),
+                enabled = !guardando && uiState.categorias.isNotEmpty(),
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
             ) {
-                Text(if (formulario.editandoId == null) "Crear producto" else "Guardar cambios")
+                Text(if (guardando) "Guardando..." else if (formulario.editandoId == null) "Crear producto" else "Guardar cambios")
             }
             if (formulario.editandoId != null) {
-                TextButton(onClick = viewModel::cancelarEdicion, enabled = !uiState.operando) {
+                TextButton(onClick = viewModel::cancelarEdicion, enabled = !guardando) {
                     Text("Cancelar edición")
                 }
             }
 
             uiState.mensajeError?.let {
                 Text("Error: $it", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
+            }
+
+            (uiState.operacion as? ProductoOperacion.Fallida)?.let {
+                Text(it.mensaje, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
             }
 
             uiState.mensajeResultado?.let {
