@@ -13,25 +13,26 @@ import pe.edu.upeu.pharmamobile.data.remote.dto.ProductoDto
 import pe.edu.upeu.pharmamobile.data.remote.dto.ProductoRequestDto
 
 class ProductoApi(private val client: HttpClient) {
-    suspend fun obtenerProductos(pagina: Int, tamanio: Int = 20): PaginaProductosDto =
+    suspend fun obtenerProductos(pagina: Int, tamanio: Int = 20): PaginaProductosDto = ejecutarLlamada {
         client.get("productos") {
             url {
                 parameters.append("pagina", pagina.toString())
                 parameters.append("tamanio", tamanio.toString())
             }
         }.body()
+    }
 
-    suspend fun obtenerCategorias(): List<CategoriaDto> = client.get("categorias").body()
+    suspend fun obtenerCategorias(): List<CategoriaDto> = ejecutarLlamada { client.get("categorias").body() }
 
-    suspend fun obtener(id: Long): ProductoDto = client.get("productos/$id").body()
+    suspend fun obtener(id: Long): ProductoDto = ejecutarLlamada { client.get("productos/$id").body() }
 
     suspend fun crear(request: ProductoRequestDto): ProductoDto =
-        client.post("productos") { setBody(request) }.body()
+        ejecutarLlamada { client.post("productos") { setBody(request) }.body() }
 
     suspend fun actualizar(id: Long, request: ProductoRequestDto): ProductoDto =
-        client.put("productos/$id") { setBody(request) }.body()
+        ejecutarLlamada { client.put("productos/$id") { setBody(request) }.body() }
 
     suspend fun eliminar(id: Long) {
-        client.delete("productos/$id")
+        ejecutarLlamada { client.delete("productos/$id") }
     }
 }
