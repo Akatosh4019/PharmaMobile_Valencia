@@ -37,10 +37,10 @@ class RegistrarProductoUseCaseTest {
     }
 
     @Test
-    fun precioCeroGeneraError() {
+    fun precioCeroLlegaAlServidorParaValidacion() {
         val errores = useCase.validar("Ibuprofeno", "0", "100", 1L)
 
-        assertEquals("El precio debe ser al menos 0.01", errores.precio)
+        assertNull(errores.precio)
     }
 
     @Test

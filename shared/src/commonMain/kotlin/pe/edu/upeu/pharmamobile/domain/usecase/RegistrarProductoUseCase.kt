@@ -32,7 +32,7 @@ class RegistrarProductoUseCase(
             precio = when {
                 precio.isBlank() -> "El precio es obligatorio"
                 precioNumerico == null -> "El precio debe ser numérico"
-                !precioNumerico.isFinite() || precioNumerico < 0.01 -> "El precio debe ser al menos 0.01"
+                !precioNumerico.isFinite() -> "El precio debe ser un número finito"
                 else -> null
             },
             categoria = if (categoriaId == null || categoriaId <= 0) "Selecciona una categoría" else null,

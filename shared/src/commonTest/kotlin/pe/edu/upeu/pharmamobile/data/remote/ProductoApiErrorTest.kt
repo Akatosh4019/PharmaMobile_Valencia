@@ -11,6 +11,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import pe.edu.upeu.pharmamobile.data.remote.dto.ProductoRequestDto
@@ -47,6 +48,44 @@ class ProductoApiErrorTest {
             assertIs<ErrorApi.NoEncontrado>(error.error)
         } finally {
             client.close()
+        }
+    }
+
+    @Test
+    fun precioCeroDevuelveValidacionPorCampo() = runTest {
+        val client = cliente(HttpStatusCode.BadRequest, """{
+            "status":400,"message":"Existen errores de validación",
+            "validationErrors":{"precio":"El precio debe ser mayor o igual a 0.01"}
+        }""")
+        try {
+            val error = assertFailsWith<ErrorApiException> {
+                ProductoApi(client).crear(ProductoRequestDto("Prueba precio", 0.0, 1, true, 1L))
+            }
+            val validacion = assertIs<ErrorApi.Validacion>(error.error)
+            assertEquals("El precio debe ser mayor o igual a 0.01", validacion.porCampo["precio"])
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun segundaDesactivacionSeTraduceAConflicto() = runTest {
+        val client = cliente(HttpStatusCode.Conflict, """{
+            "status":409,"message":"El producto nuevo ya se encuentra inactivo"
+        }""")
+        try {
+            val error = assertFailsWith<ErrorApiException> { ProductoApi(client).eliminar(81L) }
+            val conflicto = assertIs<ErrorApi.Conflicto>(error.error)
+            assertEquals("El producto nuevo ya se encuentra inactivo", conflicto.mensaje)
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun cancelacionNoSeTraduceAErrorDeRed() = runTest {
+        assertFailsWith<CancellationException> {
+            ejecutarLlamada<Unit> { throw CancellationException("Pantalla cerrada") }
         }
     }
 

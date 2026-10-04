@@ -73,8 +73,12 @@ class ProductoViewModelTest {
     }
 
     @Test
-    fun precioCeroMuestraErrorSinLlamarAlRepositorio() = runTest(dispatcher.scheduler) {
-        val repository = ProductoRepositoryFalso(productosIniciales = emptyList())
+    fun precioCeroMuestraValidacionDelServidorSinPerderLaLista() = runTest(dispatcher.scheduler) {
+        val producto = Producto(1L, "Paracetamol", 15.5, 100, categoriaId = 1L)
+        val repository = ProductoRepositoryFalso(
+            productosIniciales = listOf(producto),
+            errorAlRegistrar = ErrorApiException(ErrorApi.Validacion(mapOf("precio" to "El precio debe ser mayor o igual a 0.01"))),
+        )
         val viewModel = crearViewModel(repository)
         advanceUntilIdle()
 
@@ -85,8 +89,9 @@ class ProductoViewModelTest {
         viewModel.registrar()
         advanceUntilIdle()
 
-        assertEquals("El precio debe ser al menos 0.01", viewModel.uiState.value.formulario.precioError)
-        assertEquals(0, repository.llamadasARegistrar)
+        assertEquals("El precio debe ser mayor o igual a 0.01", viewModel.uiState.value.formulario.precioError)
+        assertEquals(1, repository.llamadasARegistrar)
+        assertIs<ProductoFase.ConProductos>(viewModel.uiState.value.fase)
     }
 
     @Test
@@ -146,6 +151,7 @@ class ProductoViewModelTest {
         assertEquals(1, repository.llamadasARegistrar)
         assertEquals("El nombre debe tener entre 3 y 150 caracteres", viewModel.uiState.value.formulario.nombreError)
         assertIs<ProductoOperacion.Inactiva>(viewModel.uiState.value.operacion)
+        assertIs<ProductoFase.SinProductos>(viewModel.uiState.value.fase)
     }
 
     @Test
@@ -191,11 +197,16 @@ class ProductoViewModelTest {
 
         viewModel.solicitarEliminar(original)
         viewModel.confirmarEliminar()
+        val enCurso = assertIs<ProductoOperacion.EnCurso>(viewModel.uiState.value.operacion)
+        assertEquals(ProductoOperacion.Tipo.DESACTIVAR, enCurso.tipo)
+        assertIs<ProductoFase.ConProductos>(viewModel.uiState.value.fase)
         advanceUntilIdle()
 
         assertEquals(1, viewModel.uiState.value.productos.size)
         assertEquals(false, viewModel.uiState.value.productos.single().activo)
         assertEquals(ProductoFiltro.INACTIVOS, viewModel.uiState.value.filtro)
+        assertIs<ProductoOperacion.Inactiva>(viewModel.uiState.value.operacion)
+        assertEquals(2, repository.llamadasAListar)
     }
 
     private fun crearViewModel(repository: ProductoRepository): ProductoViewModel =
