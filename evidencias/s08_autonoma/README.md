@@ -1,6 +1,6 @@
 # Sesión 8 actividad autónoma
 
-Esta carpeta conserva capturas originales de la ejecución en Android. Los archivos 01 a 09 documentan listado, creación, actualización, baja lógica y validación 400 del nombre. Los archivos 10 y 11 documentan la validación 400 del precio y el conflicto 409 por nombre duplicado. El archivo 12 documenta la pérdida de conexión con la API. No son evidencia de los otros escenarios de la bitácora.
+Esta carpeta conserva capturas originales de la ejecución en Android. Los archivos 01 a 09 documentan listado, creación, actualización, baja lógica y validación 400 del nombre. Los archivos 10 y 11 documentan la validación 400 del precio y el conflicto 409 por nombre duplicado. El archivo 12 documenta la pérdida de conexión con la API. Los archivos 13 y 14 documentan el timeout provocado temporalmente con `requestTimeoutMillis = 1`; el valor normal de 15 segundos se restauró después. No son evidencia de los otros escenarios de la bitácora.
 
 ## Estado comprobado
 
@@ -15,6 +15,7 @@ Esta carpeta conserva capturas originales de la ejecución en Android. Los archi
 | Validación del precio 400 | Captura 10: precio `0`, mensaje bajo Precio y POST 400 en Logcat. |
 | Conflicto por nombre duplicado 409 | Captura 11: mensaje de producto existente y POST 409 en Logcat. |
 | Servidor caído | Captura 12: GET de productos falla con `ConnectException`; la app muestra "Sin conexión con el servidor" y ofrece Reintentar. No hubo respuesta HTTP, por lo que no hay código de estado. |
+| Tiempo agotado | Capturas 13 y 14: Ktor informa `Request timeout has expired` con límite de 1 ms; la app muestra "La solicitud tardó demasiado". No hubo respuesta HTTP. |
 | Pruebas en commonTest | `:shared:testAndroidHostTest` pasó el 4 de octubre de 2026: 34 pruebas, 0 fallos. |
 | Compilación Android | `:androidApp:assembleDebug` pasó el 4 de octubre de 2026. |
 
@@ -22,7 +23,6 @@ Esta carpeta conserva capturas originales de la ejecución en Android. Los archi
 
 1. Actualización de ID inexistente: ejecutar un PUT con un ID que no exista en Swagger o Postman y registrar el 404. La interfaz normal no permite editar un producto ausente; una captura de Swagger por sí sola no demuestra el mensaje en la app.
 2. Doble DELETE: desactivar un producto activo y repetir el DELETE sobre el mismo ID desde Swagger. Este backend devuelve **409 Conflict**, no 404, porque la baja es lógica y el registro sigue existiendo. Documentar esa diferencia con la ficha; no atribuirle `NoEncontrado`.
-3. Timeout: usar temporalmente un `requestTimeoutMillis` muy bajo y actualizar la lista. Capturar `TiempoAgotado`; restaurar luego la configuración normal de 15 segundos.
-4. Cancelación: iniciar una operación y salir de la pantalla antes de la respuesta. El código relanza `CancellationException` sin convertirla en `ErrorApi`; la prueba automatizada `cancelacionNoSeTraduceAErrorDeRed` verifica esa regla, pero falta una observación visual si la rúbrica la exige.
+3. Cancelación: iniciar una operación y salir de la pantalla antes de la respuesta. El código relanza `CancellationException` sin convertirla en `ErrorApi`; la prueba automatizada `cancelacionNoSeTraduceAErrorDeRed` verifica esa regla, pero falta una observación visual si la rúbrica la exige.
 
 La ficha solicita capturas de Android e iOS; según la indicación del docente comunicada por el estudiante, iOS no forma parte de esta entrega. No se debe inventar evidencia iOS.
