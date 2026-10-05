@@ -1,6 +1,6 @@
 # Sesión 8 actividad autónoma
 
-Esta carpeta conserva capturas de Android (01 a 14), Swagger UI (15 a 20) y una ejecución de prueba automatizada (21). Las primeras documentan listado, creación, actualización, baja lógica, validaciones 400, conflicto 409, pérdida de conexión y timeout. La captura 15 verifica GET por ID 200; la 16 verifica PUT sobre ID inexistente 404. Las capturas 17 a 19 documentan la doble baja del producto 101. La captura 20 verifica PUT `/api/v1/productos/1` con HTTP 200 y precio actualizado a 25.01. La captura 21 muestra una prueba individual aprobada; el nombre queda cortado en la vista y conviene otra captura que lo muestre completo. El timeout se provocó temporalmente con `requestTimeoutMillis = 1` y luego se restauró el valor normal de 15 segundos. No se atribuye a la app una respuesta observada solo en Swagger.
+Esta carpeta conserva capturas de Android (01 a 14), Swagger UI (15 a 20) y una ejecución de prueba automatizada (21 y 22). Las primeras documentan listado, creación, actualización, baja lógica, validaciones 400, conflicto 409, pérdida de conexión y timeout. La captura 15 verifica GET por ID 200; la 16 verifica PUT sobre ID inexistente 404. Las capturas 17 a 19 documentan la doble baja del producto 101. La captura 20 verifica PUT `/api/v1/productos/1` con HTTP 200 y precio actualizado a 25.01. Las capturas 21 y 22 muestran una prueba individual aprobada; la 22 identifica `ProductoApiErrorTest.cancelacionNoSeTraduceAErrorDeRed` en la pestaña Run. El timeout se provocó temporalmente con `requestTimeoutMillis = 1` y luego se restauró el valor normal de 15 segundos. No se atribuye a la app una respuesta observada solo en Swagger.
 
 ## Estado comprobado
 
@@ -20,10 +20,10 @@ Esta carpeta conserva capturas de Android (01 a 14), Swagger UI (15 a 20) y una 
 | Tiempo agotado | Capturas 13 y 14: Ktor informa `Request timeout has expired` con límite de 1 ms; la app muestra "La solicitud tardó demasiado". No hubo respuesta HTTP. |
 | Pruebas en commonTest | `:shared:testAndroidHostTest` pasó tras añadir la prueba PUT 404: 35 pruebas, 0 fallos. |
 | Compilación Android | `:androidApp:assembleDebug` pasó el 4 de octubre de 2026. |
-| Cancelación | Captura 21: ejecución individual aprobada (`1 test passed`, `BUILD SUCCESSFUL`); falta captura con nombre de prueba completo para asociarla visualmente a `cancelacionNoSeTraduceAErrorDeRed`. |
+| Cancelación | Captura 21: ejecución individual aprobada (`1 test passed`, `BUILD SUCCESSFUL`). Captura 22: pestaña Run identifica la prueba `ProductoApiErrorTest.cancelacionNoSeTraduceAErrorDeRed` y muestra `1 test passed`. |
 
-## Escenarios aún por ejecutar
+## Limitación de la evidencia
 
-1. Cancelación: el código relanza `CancellationException` sin convertirla en `ErrorApi`; la prueba automatizada `cancelacionNoSeTraduceAErrorDeRed` verifica esa regla. Conviene capturar la vista de Run con el nombre de la prueba legible. La ejecución automatizada no sustituye una observación en la UI si la rúbrica exige expresamente iniciar una operación y salir de la pantalla.
+La cancelación se verificó con la prueba `cancelacionNoSeTraduceAErrorDeRed`, que comprueba que `CancellationException` no se convierte en `ErrorApi`. No se observó visualmente el caso de iniciar una operación y salir de la pantalla; esta prueba no debe presentarse como una captura de comportamiento de la UI.
 
 La ficha solicita capturas de Android e iOS; según la indicación del docente comunicada por el estudiante, iOS no forma parte de esta entrega. No se debe inventar evidencia iOS.
