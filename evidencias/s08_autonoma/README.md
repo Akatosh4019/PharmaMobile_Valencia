@@ -1,6 +1,6 @@
 # Sesión 8 actividad autónoma
 
-Esta carpeta conserva capturas de Android (01 a 14) y Swagger UI (15 a 19). Las primeras documentan listado, creación, actualización, baja lógica, validaciones 400, conflicto 409, pérdida de conexión y timeout. La captura 15 verifica GET por ID 200; la 16 verifica PUT sobre ID inexistente 404. Las capturas 17 a 19 documentan la doble baja del producto 101. El timeout se provocó temporalmente con `requestTimeoutMillis = 1` y luego se restauró el valor normal de 15 segundos. No se atribuye a la app una respuesta observada solo en Swagger.
+Esta carpeta conserva capturas de Android (01 a 14) y Swagger UI (15 a 20). Las primeras documentan listado, creación, actualización, baja lógica, validaciones 400, conflicto 409, pérdida de conexión y timeout. La captura 15 verifica GET por ID 200; la 16 verifica PUT sobre ID inexistente 404. Las capturas 17 a 19 documentan la doble baja del producto 101. La captura 20 verifica PUT `/api/v1/productos/1` con HTTP 200 y precio actualizado a 25.01. El timeout se provocó temporalmente con `requestTimeoutMillis = 1` y luego se restauró el valor normal de 15 segundos. No se atribuye a la app una respuesta observada solo en Swagger.
 
 ## Estado comprobado
 
@@ -8,8 +8,8 @@ Esta carpeta conserva capturas de Android (01 a 14) y Swagger UI (15 a 19). Las 
 | --- | --- |
 | Listar GET 200 | Captura de la lista; el código 200 consta en el registro de la práctica de sesión 8. |
 | Crear POST 201 | Capturas 02, 03 y 04. |
-| Actualizar PUT 200 | Capturas 05 y 06 muestran el cambio en la app; falta capturar el código PUT 200. |
-| Desactivar DELETE 204 | Captura 07 muestra el producto en Inactivos; falta capturar el código DELETE 204. |
+| Actualizar PUT 200 | Capturas 05 y 06 muestran un cambio en la app; captura 20 verifica otro PUT exitoso (ID 1, precio 25.01) con HTTP 200 en Swagger. |
+| Desactivar DELETE 204 | Captura 07 muestra un producto en Inactivos; captura 18 verifica un DELETE exitoso (ID 101) con HTTP 204 en Swagger. |
 | Obtener GET por ID 200 | Captura 15: GET `/api/v1/productos/1` devuelve Paracetamol con HTTP 200 en Swagger. |
 | Actualización de ID inexistente 404 | Captura 16: PUT `/api/v1/productos/99999999` con cuerpo válido devuelve HTTP 404 y "Producto no encontrado" en Swagger; no se observó este error en la pantalla Android. |
 | Doble DELETE del mismo ID | Captura 17: POST creó `PruebaDobleBajaOct` con ID 101. Captura 18: primer DELETE `/api/v1/productos/101` devolvió 204. Captura 19: segundo DELETE al mismo ID devolvió 409 "ya se encuentra inactivo". Es una diferencia real con el 404 esperado en la ficha. |
