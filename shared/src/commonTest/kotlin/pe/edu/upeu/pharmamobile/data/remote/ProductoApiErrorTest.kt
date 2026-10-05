@@ -52,6 +52,22 @@ class ProductoApiErrorTest {
     }
 
     @Test
+    fun actualizarIdInexistenteSeTraduceANoEncontrado() = runTest {
+        val client = cliente(HttpStatusCode.NotFound, """{"status":404,"message":"Producto no encontrado con id: 99999999"}""")
+        try {
+            val error = assertFailsWith<ErrorApiException> {
+                ProductoApi(client).actualizar(
+                    99999999L,
+                    ProductoRequestDto("Inexistente", 1.01, 1, true, 1L),
+                )
+            }
+            assertIs<ErrorApi.NoEncontrado>(error.error)
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
     fun precioCeroDevuelveValidacionPorCampo() = runTest {
         val client = cliente(HttpStatusCode.BadRequest, """{
             "status":400,"message":"Existen errores de validación",
