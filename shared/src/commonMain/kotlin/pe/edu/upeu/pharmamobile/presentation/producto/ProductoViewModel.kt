@@ -176,6 +176,7 @@ class ProductoViewModel(
                     _uiState.update {
                         it.copy(
                             productos = productos,
+                            productosUi = productos.map { producto -> producto.toUi() },
                             fase = if (productos.isEmpty()) ProductoFase.SinProductos else ProductoFase.ConProductos(productos),
                         )
                     }

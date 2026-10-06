@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import pe.edu.upeu.pharmamobile.domain.model.Producto
 import pe.edu.upeu.pharmamobile.presentation.components.ValidatedTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -184,16 +183,16 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
             }
 
             is ProductoFase.ConProductos -> {
-                if (uiState.productosFiltrados.isEmpty()) {
+                if (uiState.productosUiFiltrados.isEmpty()) {
                     item {
                         Text("No hay productos en esta categoría", modifier = Modifier.padding(vertical = 24.dp))
                     }
                 } else {
-                    items(uiState.productosFiltrados, key = { it.id }) { producto ->
+                    items(uiState.productosUiFiltrados, key = { it.producto.id }) { productoUi ->
                         ProductoItem(
-                            producto = producto,
-                            onEditar = { viewModel.editar(producto) },
-                            onEliminar = { viewModel.solicitarEliminar(producto) },
+                            productoUi = productoUi,
+                            onEditar = { viewModel.editar(productoUi.producto) },
+                            onEliminar = { viewModel.solicitarEliminar(productoUi.producto) },
                             operando = uiState.operando,
                             modifier = Modifier.padding(top = 10.dp),
                         )
@@ -211,12 +210,13 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
 
 @Composable
 private fun ProductoItem(
-    producto: Producto,
+    productoUi: ProductoUi,
     onEditar: () -> Unit,
     onEliminar: () -> Unit,
     operando: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val producto = productoUi.producto
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -235,7 +235,7 @@ private fun ProductoItem(
                     style = MaterialTheme.typography.labelLarge,
                 )
             }
-            Text("Precio: S/ ${producto.precio}", modifier = Modifier.padding(top = 6.dp))
+            Text("Precio: ${productoUi.precioFormateado}", modifier = Modifier.padding(top = 6.dp))
             Text("Stock: ${producto.stock}")
             producto.categoriaNombre?.let { Text("Categoría: $it") }
             if (producto.requiereReposicion()) {

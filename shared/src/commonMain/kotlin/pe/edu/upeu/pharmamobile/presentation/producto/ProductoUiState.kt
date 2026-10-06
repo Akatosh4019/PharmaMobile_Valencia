@@ -41,6 +41,7 @@ data class ProductoFormularioUiState(
 data class ProductoUiState(
     val fase: ProductoFase = ProductoFase.Cargando,
     val productos: List<Producto> = emptyList(),
+    val productosUi: List<ProductoUi> = emptyList(),
     val formulario: ProductoFormularioUiState = ProductoFormularioUiState(),
     val categorias: List<Categoria> = emptyList(),
     val operacion: ProductoOperacion = ProductoOperacion.Inactiva,
@@ -58,6 +59,15 @@ data class ProductoUiState(
                 ProductoFiltro.ACTIVOS -> producto.activo
                 ProductoFiltro.INACTIVOS -> !producto.activo
                 ProductoFiltro.BAJO_STOCK -> producto.requiereReposicion()
+            }
+        }
+
+    val productosUiFiltrados: List<ProductoUi>
+        get() = productosUi.filter { item ->
+            when (filtro) {
+                ProductoFiltro.ACTIVOS -> item.producto.activo
+                ProductoFiltro.INACTIVOS -> !item.producto.activo
+                ProductoFiltro.BAJO_STOCK -> item.producto.requiereReposicion()
             }
         }
 }
