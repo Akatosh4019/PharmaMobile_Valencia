@@ -49,6 +49,7 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
     val titulos = listOf("Activos", "Inactivos", "Bajo stock")
     val listState = rememberLazyListState()
     var categoriasAbiertas by remember { mutableStateOf(false) }
+    var productoDetalle by remember { mutableStateOf<ProductoUi?>(null) }
     LaunchedEffect(formulario.editandoId) {
         if (formulario.editandoId != null) listState.animateScrollToItem(0)
     }
@@ -60,6 +61,30 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
             text = { Text("¿Desactivar ${producto.nombre}? Seguirá visible en Inactivos y podrás reactivarlo al editar.") },
             confirmButton = { TextButton(onClick = viewModel::confirmarEliminar) { Text("Desactivar") } },
             dismissButton = { TextButton(onClick = viewModel::cancelarEliminacion) { Text("Cancelar") } },
+        )
+    }
+
+    productoDetalle?.let { item ->
+        AlertDialog(
+            onDismissRequest = { productoDetalle = null },
+            title = { Text(item.producto.nombre) },
+            text = {
+                Column {
+                    Text("Precio: ${item.precioFormateado}")
+                    Text("Stock: ${item.producto.stock}")
+                    item.producto.categoriaNombre?.let { Text("Categoría: $it") }
+                    Text(if (item.producto.activo) "Activo" else "Inactivo")
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    productoDetalle = null
+                    viewModel.compartir(item)
+                }) { Text("Compartir") }
+            },
+            dismissButton = {
+                TextButton(onClick = { productoDetalle = null }) { Text("Cerrar") }
+            },
         )
     }
 
@@ -193,6 +218,7 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
                             productoUi = productoUi,
                             onEditar = { viewModel.editar(productoUi.producto) },
                             onEliminar = { viewModel.solicitarEliminar(productoUi.producto) },
+                            onDetalle = { productoDetalle = productoUi },
                             operando = uiState.operando,
                             modifier = Modifier.padding(top = 10.dp),
                         )
@@ -213,6 +239,7 @@ private fun ProductoItem(
     productoUi: ProductoUi,
     onEditar: () -> Unit,
     onEliminar: () -> Unit,
+    onDetalle: () -> Unit,
     operando: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -247,6 +274,7 @@ private fun ProductoItem(
                 )
             }
             Row(modifier = Modifier.fillMaxWidth()) {
+                TextButton(onClick = onDetalle) { Text("Detalle") }
                 TextButton(onClick = onEditar, enabled = !operando) { Text("Editar") }
                 if (producto.activo) {
                     TextButton(onClick = onEliminar, enabled = !operando) { Text("Desactivar") }

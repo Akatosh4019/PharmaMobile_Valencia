@@ -12,6 +12,7 @@ import pe.edu.upeu.pharmamobile.domain.model.Categoria
 import pe.edu.upeu.pharmamobile.domain.error.ErrorApi
 import pe.edu.upeu.pharmamobile.domain.error.ErrorApiException
 import pe.edu.upeu.pharmamobile.domain.repository.ProductoRepository
+import pe.edu.upeu.pharmamobile.domain.platform.Compartidor
 import pe.edu.upeu.pharmamobile.domain.usecase.RegistrarProductoUseCase
 import pe.edu.upeu.pharmamobile.domain.usecase.ActualizarProductoUseCase
 import pe.edu.upeu.pharmamobile.domain.usecase.EliminarProductoUseCase
@@ -209,13 +210,39 @@ class ProductoViewModelTest {
         assertEquals(2, repository.llamadasAListar)
     }
 
-    private fun crearViewModel(repository: ProductoRepository): ProductoViewModel =
+    @Test
+    fun compartirProductoEnviaTextoAlCompartidor() = runTest(dispatcher.scheduler) {
+        val compartidor = CompartidorFalso()
+        val producto = Producto(1L, "Paracetamol", 15.50, 100)
+        val viewModel = crearViewModel(ProductoRepositoryFalso(), compartidor)
+
+        viewModel.compartir(producto.toUi())
+
+        val texto = compartidor.textoCompartido ?: error("No se compartió el producto")
+        kotlin.test.assertContains(texto, "Paracetamol")
+        kotlin.test.assertContains(texto, "Precio:")
+        kotlin.test.assertContains(texto, "Stock: 100")
+    }
+
+    private fun crearViewModel(
+        repository: ProductoRepository,
+        compartidor: Compartidor = CompartidorFalso(),
+    ): ProductoViewModel =
         ProductoViewModel(
             registrarProducto = RegistrarProductoUseCase(repository),
             repository = repository,
             actualizarProducto = ActualizarProductoUseCase(repository),
             eliminarProducto = EliminarProductoUseCase(repository),
+            compartidor = compartidor,
         )
+}
+
+private class CompartidorFalso : Compartidor {
+    var textoCompartido: String? = null
+
+    override fun compartir(texto: String) {
+        textoCompartido = texto
+    }
 }
 
 private class ProductoRepositoryFalso(

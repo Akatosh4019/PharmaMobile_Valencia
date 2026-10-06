@@ -12,6 +12,7 @@ import pe.edu.upeu.pharmamobile.domain.error.ErrorApi
 import pe.edu.upeu.pharmamobile.domain.error.ErrorApiException
 import pe.edu.upeu.pharmamobile.domain.error.mensajeUsuario
 import pe.edu.upeu.pharmamobile.domain.repository.ProductoRepository
+import pe.edu.upeu.pharmamobile.domain.platform.Compartidor
 import pe.edu.upeu.pharmamobile.domain.usecase.RegistrarProductoUseCase
 import pe.edu.upeu.pharmamobile.domain.usecase.ActualizarProductoUseCase
 import pe.edu.upeu.pharmamobile.domain.usecase.EliminarProductoUseCase
@@ -21,6 +22,7 @@ class ProductoViewModel(
     private val repository: ProductoRepository,
     private val actualizarProducto: ActualizarProductoUseCase,
     private val eliminarProducto: EliminarProductoUseCase,
+    private val compartidor: Compartidor,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ProductoUiState())
     val uiState = _uiState.asStateFlow()
@@ -43,6 +45,15 @@ class ProductoViewModel(
 
     fun cambiarFiltro(filtro: ProductoFiltro) {
         _uiState.update { it.copy(filtro = filtro) }
+    }
+
+    fun compartir(productoUi: ProductoUi) {
+        try {
+            compartidor.compartir(productoUi.comoTextoParaCompartir())
+        } catch (error: Exception) {
+            if (error is CancellationException) throw error
+            _uiState.update { it.copy(mensajeError = "No se pudo abrir la opción de compartir") }
+        }
     }
 
     fun editar(producto: Producto) {

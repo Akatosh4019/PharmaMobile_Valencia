@@ -30,7 +30,7 @@ val useCaseModule = module {
 }
 
 val viewModelModule = module {
-    viewModel { ProductoViewModel(get(), get(), get(), get()) }
+    viewModel { ProductoViewModel(get(), get(), get(), get(), get()) }
 }
 
 expect val platformModule: Module
