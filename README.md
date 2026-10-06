@@ -68,3 +68,14 @@ La validación local solo rechaza entradas ausentes o que no pueden convertirse 
 La ausencia temporal de los `actual` produjo el error de compilación esperado `Expected formatearSoles has no actual declaration`. Tras agregar ambas implementaciones, `:shared:testAndroidHostTest` y `:androidApp:assembleDebug` pasaron en Windows. El target iOS aún requiere compilarse y probarse en macOS con Xcode; esta verificación de Android no demuestra que la presentación de iOS ya esté validada.
 
 El contrato `domain/platform/Compartidor.kt` mantiene la acción de compartir fuera de la lógica de la plataforma. `CompartidorAndroid` usa `Intent.ACTION_SEND` con texto plano y `CompartidorIos` presenta un `UIActivityViewController`; Koin registra la implementación correspondiente en cada plataforma. Desde «Detalle» en la tarjeta de un producto, el botón «Compartir» envía nombre, precio formateado y stock. En Android se verificó en el emulador que se abre el selector nativo y que la vista previa contiene esos tres datos. Las capturas están en `evidencias/s09_practica/`.
+
+Archivos de esta sesión por source set:
+
+- `shared/src/commonMain/kotlin/pe/edu/upeu/pharmamobile/platform/Formato.kt`: declaración `expect`.
+- `shared/src/androidMain/kotlin/pe/edu/upeu/pharmamobile/platform/Formato.android.kt` y `shared/src/iosMain/kotlin/pe/edu/upeu/pharmamobile/platform/Formato.ios.kt`: implementaciones `actual`.
+- `shared/src/commonMain/kotlin/pe/edu/upeu/pharmamobile/domain/platform/Compartidor.kt`: contrato de dominio.
+- `shared/src/androidMain/kotlin/pe/edu/upeu/pharmamobile/platform/CompartidorAndroid.kt` y `shared/src/iosMain/kotlin/pe/edu/upeu/pharmamobile/platform/CompartidorIos.kt`: capacidades nativas.
+- `shared/src/androidMain/kotlin/pe/edu/upeu/pharmamobile/di/PlatformModule.android.kt` y `shared/src/iosMain/kotlin/pe/edu/upeu/pharmamobile/di/PlatformModule.ios.kt`: registros de Koin.
+- `shared/src/commonMain/kotlin/pe/edu/upeu/pharmamobile/presentation/producto/ProductoUi.kt`, `TextoParaCompartir.kt`, `ProductoViewModel.kt` y `ProductoScreen.kt`: precio y acción visibles sin importar APIs de Android o UIKit.
+
+Evidencias Android: `evidencias/s09_practica/02-paso1-emulador-verificacion.png`, `03-precios-formateados-listado-android.png`, `04-detalle-producto-android.png` y `05-selector-compartir-android.png`. `01-expect-sin-actual-editor.png` muestra la declaración antes de añadir `actual`, pero no sustituye una captura del mensaje del compilador. Según la indicación del docente comunicada por el equipo, no se adjuntan capturas iOS porque no se dispone de macOS ni simulador iOS; el código iOS permanece sin verificación en Xcode.
