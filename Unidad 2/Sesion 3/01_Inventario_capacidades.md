@@ -1,0 +1,17 @@
+# Producto 1. Inventario de capacidades nativas
+
+Proyecto: PharmaMobil Valencia. Rama: `feature/expect-actual-valencia`.
+
+Las rutas siguientes son relativas a la raíz del repositorio. `commonMain` declara el contrato; `androidMain` e `iosMain` aportan la implementación. El inventario recoge **todas** las declaraciones `expect` presentes, no solo las añadidas en esta sesión.
+
+| Capacidad y firma común | Archivo en `commonMain` | `actual` Android y API | `actual` iOS y API |
+|---|---|---|---|
+| Moneda: `expect fun formatearSoles(valor: Double): String` | `shared/src/commonMain/kotlin/pe/edu/upeu/pharmamobile/platform/Formato.kt` | `shared/src/androidMain/kotlin/pe/edu/upeu/pharmamobile/platform/Formato.android.kt`; `java.text.NumberFormat`, `Locale.forLanguageTag("es-PE")` | `shared/src/iosMain/kotlin/pe/edu/upeu/pharmamobile/platform/Formato.ios.kt`; Foundation `NSNumberFormatter`, `NSLocale("es_PE")` |
+| Información del dispositivo: `expect class InfoDispositivo()` con `sistema` y `version` | `shared/src/commonMain/kotlin/pe/edu/upeu/pharmamobile/platform/InfoDispositivo.kt` | `shared/src/androidMain/kotlin/pe/edu/upeu/pharmamobile/platform/InfoDispositivo.android.kt`; `Build.VERSION.RELEASE` | `shared/src/iosMain/kotlin/pe/edu/upeu/pharmamobile/platform/InfoDispositivo.ios.kt`; `UIDevice.currentDevice.systemName/systemVersion` |
+| Módulo DI: `expect val platformModule: Module` | `shared/src/commonMain/kotlin/pe/edu/upeu/pharmamobile/di/AppModule.kt` | `shared/src/androidMain/kotlin/pe/edu/upeu/pharmamobile/di/PlatformModule.android.kt`; Koin `module`, motor Ktor OkHttp, `CompartidorAndroid(get())`; `androidContext` se proporciona en `androidApp/src/main/kotlin/pe/edu/upeu/pharmamobile/MainApplication.kt` | `shared/src/iosMain/kotlin/pe/edu/upeu/pharmamobile/di/PlatformModule.ios.kt`; Koin `module`, motor Ktor Darwin, `CompartidorIos()` sin `Context` |
+| Identificación de plataforma: `expect fun getPlatform(): Platform` | `shared/src/commonMain/kotlin/pe/edu/upeu/pharmamobile/Platform.kt` | `shared/src/androidMain/kotlin/pe/edu/upeu/pharmamobile/Platform.android.kt`; `Build.VERSION.SDK_INT` | `shared/src/iosMain/kotlin/pe/edu/upeu/pharmamobile/Platform.ios.kt`; `UIDevice` |
+| Registro HTTP: `expect fun loggerHttp(): Logger` | `shared/src/commonMain/kotlin/pe/edu/upeu/pharmamobile/data/remote/HttpClientFactory.kt` | `shared/src/androidMain/kotlin/pe/edu/upeu/pharmamobile/data/remote/HttpLogger.android.kt`; `android.util.Log.i` | `shared/src/iosMain/kotlin/pe/edu/upeu/pharmamobile/data/remote/HttpLogger.ios.kt`; `Logger.SIMPLE` |
+
+`Compartidor` **no es una declaración `expect`**: es una interfaz común en `shared/src/commonMain/kotlin/pe/edu/upeu/pharmamobile/domain/platform/Compartidor.kt`. Se implementa en `shared/src/androidMain/kotlin/pe/edu/upeu/pharmamobile/platform/CompartidorAndroid.kt` con `Intent.ACTION_SEND` y en `shared/src/iosMain/kotlin/pe/edu/upeu/pharmamobile/platform/CompartidorIos.kt` con `UIActivityViewController`. Los módulos Koin anteriores eligen la implementación. Se incluye aquí porque es una capacidad nativa exigida por la guía, pero no se debe confundir con `expect/actual`.
+
+La nueva capacidad aparece en la interfaz compartida `shared/src/commonMain/kotlin/pe/edu/upeu/pharmamobile/presentation/producto/ProductoScreen.kt` mediante el botón «Acerca de este dispositivo». La compilación y pruebas de Android pasaron. No se ha ejecutado iOS en este equipo Windows.
