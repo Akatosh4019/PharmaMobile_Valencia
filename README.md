@@ -5,7 +5,7 @@ Aplicación Kotlin Multiplatform con Compose, Clean Architecture y MVVM. En esta
 ## Requisitos y ejecución
 
 1. Clonar [BackendPharmobile](https://github.com/Akatosh4019/BackendPharmobile) y, en esa carpeta, ejecutar `Copy-Item .env.example .env`, `mvn -DskipTests package` y `docker compose up -d --build`. Docker inicia Oracle y la API; el primer arranque de Oracle puede tardar varios minutos.
-2. Comprobar `http://localhost:8080/api/health` y `http://localhost:8080/api/v1/productos`. El segundo GET debe devolver 200 y un objeto con `contenido` no vacío.
+2. Comprobar `http://localhost:8080/api/health`. Desde la sesión 10, `GET /api/v1/productos` sin JWT debe devolver **401**; para obtener 200, inicia sesión y envía `Authorization: Bearer <token>`.
 3. Abrir este proyecto en Android Studio y sincronizar Gradle.
 4. Iniciar un emulador Android y ejecutar la configuración `androidApp`. Para compilar sin emulador: `./gradlew :androidApp:assembleDebug` (en Windows, `./gradlew.bat`). El backend debe seguir encendido mientras se usa la app.
 5. En macOS, abrir `iosApp` con Xcode para ejecutar el simulador iOS. No es posible verificar el simulador iOS desde Windows.
@@ -90,3 +90,17 @@ El inventario completo y el informe comparativo se encuentran en `Unidad 2/Sesio
 - Inyección, identificación de plataforma y registro HTTP: `di/PlatformModule.*.kt`, `Platform.*.kt` y `data/remote/HttpLogger.*.kt` en sus respectivos source sets. Sus contratos comunes se indican con rutas completas en el inventario.
 
 En Windows se verificaron `:shared:testAndroidHostTest` y `:androidApp:assembleDebug`. No se afirma compilación ni ejecución iOS. El estudiante indicó que el docente dispensa el uso de iOS para esta entrega por no disponer de Mac.
+
+## Sesión 10 - Autenticación JWT y autorización
+
+La rama `feature/auth-jwt-valencia` consume el backend de la rama `feature/auth-jwt-backend-valencia`. Primero levanta ese backend con Docker; el perfil local de laboratorio incluye los usuarios `admin`/`Admin123`, `vendedor`/`Vendedor123` y `almacen`/`Almacen123`. **Son credenciales de demostración, nunca de producción.** Cambia las contraseñas y utiliza HTTPS antes de publicar el servicio.
+
+El flujo es: formulario de ingreso → `POST auth/login` → JWT → almacenamiento seguro → Ktor añade `Authorization: Bearer` a las rutas protegidas → `GET auth/me` recupera el usuario al reabrir la app. Cerrar sesión borra el token. Un 401 de una ruta protegida borra la sesión y vuelve al ingreso; un 403 se presenta como falta de permiso sin cerrar la sesión. Las credenciales inválidas se muestran en el formulario.
+
+- `commonMain`: `Credenciales`, `Sesion`, `AuthRepository`, casos de uso, DTO, `EstadoSesion`, `AuthRepositorioRest` y `SesionViewModel`. `Sesion` y `Credenciales` ocultan token/contraseña en `toString()`.
+- `androidMain`: el JWT se cifra con AES/GCM; la llave se genera y mantiene en Android Keystore y el texto cifrado queda en preferencias privadas.
+- `iosMain`: implementación Keychain con elemento de contraseña genérica y accesibilidad `WhenUnlockedThisDeviceOnly`. El código no se compiló ni ejecutó en Windows; requiere comprobación en Xcode.
+- `HttpClientFactory`: Ktor Auth envía el Bearer salvo en `auth/login`; Logging se limita a encabezados en depuración y oculta `Authorization`. En versión no depurable queda desactivado.
+- `App` y `ProductoScreen`: la app pide sesión antes de mostrar el contenido. Vendedor puede consultar productos pero no crear, editar ni desactivar; almacenero y admin sí pueden. La navegación a clientes/pedidos se filtra por permisos.
+
+Verificación realizada en Windows: `./gradlew.bat :shared:testAndroidHostTest :androidApp:assembleDebug --no-configuration-cache`. En el emulador Android se inició sesión como vendedor contra Docker, se cargó el inventario y se comprobó que solo aparece «Detalle» en las tarjetas. Las pruebas automatizadas comprueban el mapeo separado de 401 y 403, la consulta de permisos y que `toString()` no expone secretos. Capturas en `evidencias/s10_practica/`. La API mantiene la autorización en el servidor: ocultar botones es solo una ayuda de interfaz, no la barrera de seguridad.

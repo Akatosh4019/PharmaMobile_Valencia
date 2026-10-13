@@ -24,6 +24,30 @@ import kotlin.test.assertFailsWith
 
 class ProductoApiErrorTest {
     @Test
+    fun error401SeConvierteEnSesionNoAutenticada() = runTest {
+        val client = cliente(HttpStatusCode.Unauthorized, """{"status":401,"message":"Token inválido"}""")
+        try {
+            val error = assertFailsWith<ErrorApiException> { ProductoApi(client).obtener(1L) }
+            assertIs<ErrorApi.NoAutenticado>(error.error)
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun error403SeConvierteEnPermisoDenegado() = runTest {
+        val client = cliente(HttpStatusCode.Forbidden, """{"status":403,"message":"Sin permiso"}""")
+        try {
+            val error = assertFailsWith<ErrorApiException> {
+                ProductoApi(client).crear(ProductoRequestDto("Producto", 10.0, 1, true, 1L))
+            }
+            assertIs<ErrorApi.SinPermiso>(error.error)
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
     fun error400TraduceValidacionPorCampo() = runTest {
         val client = cliente(HttpStatusCode.BadRequest, """{
             "status":400,"message":"Existen errores de validación",
