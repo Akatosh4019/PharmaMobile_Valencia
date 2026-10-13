@@ -14,10 +14,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,9 +34,14 @@ import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,10 +57,13 @@ import kotlinx.coroutines.launch
 import org.koin.compose.KoinContext
 import org.koin.compose.viewmodel.koinViewModel
 import pe.edu.upeu.pharmamobile.navigation.Screen
+import pe.edu.upeu.pharmamobile.domain.model.Sesion
 import pe.edu.upeu.pharmamobile.presentation.cliente.ClienteScreen
 import pe.edu.upeu.pharmamobile.presentation.inicio.InicioScreen
 import pe.edu.upeu.pharmamobile.presentation.producto.ProductoScreen
 import pe.edu.upeu.pharmamobile.presentation.producto.ProductoViewModel
+import pe.edu.upeu.pharmamobile.presentation.sesion.LoginScreen
+import pe.edu.upeu.pharmamobile.presentation.sesion.SesionViewModel
 import pe.edu.upeu.pharmamobile.theme.PharmaMobilTheme
 
 private const val COMPACT_MAX_WIDTH = 600
@@ -72,6 +82,17 @@ private val destinos = listOf(
     Destino(Screen.Pedidos, "Pedidos", Icons.Default.ShoppingCart)
 )
 
+private val LocalSesion = compositionLocalOf<Sesion> { error("Sesión no disponible") }
+private val LocalCerrarSesion = compositionLocalOf<() -> Unit> { {} }
+
+private fun destinosPermitidos(sesion: Sesion) = destinos.filter {
+    when (it.screen) {
+        Screen.Clientes -> sesion.puede("CLIENTES_LEER")
+        Screen.Pedidos -> sesion.puede("VENTAS_REGISTRAR")
+        else -> true
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
@@ -80,7 +101,20 @@ fun App() {
     var darkTheme by remember { mutableStateOf(false) }
 
     KoinContext {
+        val sesionViewModel = koinViewModel<SesionViewModel>()
+        val sesion by sesionViewModel.sesion.collectAsState()
+        val inicializando by sesionViewModel.inicializando.collectAsState()
+        LaunchedEffect(sesion?.usuario) { pantallaActual = Screen.Inicio }
         PharmaMobilTheme(darkTheme = darkTheme) {
+            if (inicializando) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            } else if (sesion == null) {
+                LoginScreen(sesionViewModel)
+            } else {
+            CompositionLocalProvider(
+                LocalSesion provides requireNotNull(sesion),
+                LocalCerrarSesion provides sesionViewModel::salir
+            ) {
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                 when {
                     maxWidth < COMPACT_MAX_WIDTH.dp -> CompactNavigation(
@@ -105,6 +139,8 @@ fun App() {
                         onDarkThemeChange = { darkTheme = it }
                     )
                 }
+            }
+            }
             }
         }
     }
@@ -166,7 +202,7 @@ private fun MediumNavigation(
                 )
             }
         ) {
-            destinos.forEach { destino ->
+            destinosPermitidos(LocalSesion.current).forEach { destino ->
                 NavigationRailItem(
                     selected = pantallaActual == destino.screen,
                     onClick = { onPantallaSeleccionada(destino.screen) },
@@ -240,6 +276,12 @@ private fun PharmaScaffold(
                             Icon(Icons.Default.Menu, contentDescription = "Abrir menú")
                         }
                     }
+                },
+                actions = {
+                    val cerrarSesion = LocalCerrarSesion.current
+                    IconButton(onClick = cerrarSesion) {
+                        Icon(Icons.Default.ExitToApp, contentDescription = "Cerrar sesión")
+                    }
                 }
             )
         }
@@ -252,9 +294,10 @@ private fun PharmaScaffold(
             when (pantallaActual) {
                 Screen.Inicio -> InicioScreen()
                 Screen.Productos -> ProductoScreen(
-                    viewModel = koinViewModel<ProductoViewModel>()
+                    viewModel = koinViewModel<ProductoViewModel>(),
+                    puedeEscribir = LocalSesion.current.puede("CATALOGO_ESCRIBIR")
                 )
-                Screen.Clientes -> ClienteScreen()
+                Screen.Clientes -> if (LocalSesion.current.puede("CLIENTES_LEER")) ClienteScreen() else Text("No tienes permiso para ver clientes")
                 Screen.Pedidos -> Text(
                     text = "Pantalla de pedidos en construcción",
                     modifier = Modifier.padding(16.dp)
@@ -277,7 +320,7 @@ private fun DrawerContent(
             .padding(horizontal = 12.dp)
     ) {
         DrawerHeader()
-        destinos.forEach { destino ->
+        destinosPermitidos(LocalSesion.current).forEach { destino ->
             NavigationDrawerItem(
                 label = { Text(destino.titulo) },
                 selected = pantallaActual == destino.screen,
@@ -295,6 +338,8 @@ private fun DrawerContent(
             Text("Modo oscuro")
             Switch(checked = darkTheme, onCheckedChange = onDarkThemeChange)
         }
+        val cerrarSesion = LocalCerrarSesion.current
+        TextButton(onClick = cerrarSesion) { Text("Cerrar sesión") }
     }
 }
 

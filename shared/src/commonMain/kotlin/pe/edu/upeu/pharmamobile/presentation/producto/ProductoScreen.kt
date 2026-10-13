@@ -39,7 +39,7 @@ import pe.edu.upeu.pharmamobile.platform.InfoDispositivo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductoScreen(viewModel: ProductoViewModel) {
+fun ProductoScreen(viewModel: ProductoViewModel, puedeEscribir: Boolean = true) {
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(viewModel) { viewModel.alMostrarPantalla() }
     val formulario = uiState.formulario
@@ -57,7 +57,7 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
         if (formulario.editandoId != null) listState.animateScrollToItem(0)
     }
 
-    uiState.productoPendienteEliminar?.let { producto ->
+    if (puedeEscribir) uiState.productoPendienteEliminar?.let { producto ->
         AlertDialog(
             onDismissRequest = viewModel::cancelarEliminacion,
             title = { Text("Desactivar producto") },
@@ -115,6 +115,7 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
         item {
             Text("PharmaMobil", style = MaterialTheme.typography.titleMedium)
             TextButton(onClick = { mostrarAcercaDe = true }) { Text("Acerca de este dispositivo") }
+            if (puedeEscribir) {
             Text(
                 if (formulario.editandoId == null) "Registro de Producto" else "Editar producto #${formulario.editandoId}",
                 style = MaterialTheme.typography.headlineSmall,
@@ -191,6 +192,7 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
                     modifier = Modifier.padding(top = 8.dp),
                 )
             }
+            }
 
             Text(
                 text = "Inventario de productos",
@@ -239,6 +241,7 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
                             onEditar = { viewModel.editar(productoUi.producto) },
                             onEliminar = { viewModel.solicitarEliminar(productoUi.producto) },
                             onDetalle = { productoDetalle = productoUi },
+                            puedeEscribir = puedeEscribir,
                             operando = uiState.operando,
                             modifier = Modifier.padding(top = 10.dp),
                         )
@@ -260,6 +263,7 @@ private fun ProductoItem(
     onEditar: () -> Unit,
     onEliminar: () -> Unit,
     onDetalle: () -> Unit,
+    puedeEscribir: Boolean,
     operando: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -295,9 +299,11 @@ private fun ProductoItem(
             }
             Row(modifier = Modifier.fillMaxWidth()) {
                 TextButton(onClick = onDetalle) { Text("Detalle") }
+                if (puedeEscribir) {
                 TextButton(onClick = onEditar, enabled = !operando) { Text("Editar") }
                 if (producto.activo) {
                     TextButton(onClick = onEliminar, enabled = !operando) { Text("Desactivar") }
+                }
                 }
             }
         }
