@@ -26,6 +26,8 @@ suspend fun <T> ejecutarLlamada(bloque: suspend () -> T): T = try {
     val cuerpo = runCatching { e.response.body<ErrorResponseDto>() }.getOrNull()
     val error = when (e.response.status.value) {
         400 -> ErrorApi.Validacion(cuerpo?.validationErrors.orEmpty())
+        401 -> ErrorApi.NoAutenticado
+        403 -> ErrorApi.SinPermiso
         404 -> ErrorApi.NoEncontrado
         409 -> ErrorApi.Conflicto(cuerpo?.message ?: "Operación no permitida")
         else -> ErrorApi.Servidor

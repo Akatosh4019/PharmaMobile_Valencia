@@ -15,14 +15,24 @@ import pe.edu.upeu.pharmamobile.domain.usecase.ObtenerProductoUseCase
 import pe.edu.upeu.pharmamobile.domain.usecase.ActualizarProductoUseCase
 import pe.edu.upeu.pharmamobile.domain.usecase.EliminarProductoUseCase
 import pe.edu.upeu.pharmamobile.presentation.producto.ProductoViewModel
+import pe.edu.upeu.pharmamobile.data.local.EstadoSesion
+import pe.edu.upeu.pharmamobile.data.repository.AuthRepositorioRest
+import pe.edu.upeu.pharmamobile.domain.repository.AuthRepository
+import pe.edu.upeu.pharmamobile.domain.usecase.IniciarSesionUseCase
+import pe.edu.upeu.pharmamobile.domain.usecase.CerrarSesionUseCase
+import pe.edu.upeu.pharmamobile.presentation.sesion.SesionViewModel
 
 val repositoryModule = module {
-    single { crearHttpClient(get(), get(named("apiBaseUrl"))) }
+    single { EstadoSesion(get()) }
+    single { crearHttpClient(get(), get(named("apiBaseUrl")), get(), get(), get(named("esDepuracion"))) }
+    single<AuthRepository> { AuthRepositorioRest(get(), get(), get()) }
     single { ProductoApi(get()) }
     single<ProductoRepository> { ProductoRepositorioRemoto(get()) }
 }
 
 val useCaseModule = module {
+    factory { IniciarSesionUseCase(get()) }
+    factory { CerrarSesionUseCase(get()) }
     factory { RegistrarProductoUseCase(get()) }
     factory { ObtenerProductoUseCase(get()) }
     factory { ActualizarProductoUseCase(get()) }
@@ -30,6 +40,7 @@ val useCaseModule = module {
 }
 
 val viewModelModule = module {
+    viewModel { SesionViewModel(get(), get(), get(), get()) }
     viewModel { ProductoViewModel(get(), get(), get(), get(), get()) }
 }
 

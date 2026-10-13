@@ -3,6 +3,9 @@ package pe.edu.upeu.pharmamobile.domain.error
 sealed interface ErrorApi {
     data class Validacion(val porCampo: Map<String, String>) : ErrorApi
     data object NoEncontrado : ErrorApi
+    data object NoAutenticado : ErrorApi
+    data object CredencialesInvalidas : ErrorApi
+    data object SinPermiso : ErrorApi
     data class Conflicto(val mensaje: String) : ErrorApi
     data object Servidor : ErrorApi
     data object SinConexion : ErrorApi
@@ -13,6 +16,9 @@ sealed interface ErrorApi {
 fun ErrorApi.mensajeUsuario(): String = when (this) {
     is ErrorApi.Validacion -> "Revisa los datos marcados en el formulario"
     ErrorApi.NoEncontrado -> "El producto ya no está disponible"
+    ErrorApi.NoAutenticado -> "Tu sesión expiró. Inicia sesión nuevamente"
+    ErrorApi.CredencialesInvalidas -> "Usuario o contraseña incorrectos"
+    ErrorApi.SinPermiso -> "No tienes permiso para realizar esta acción"
     is ErrorApi.Conflicto -> mensaje
     ErrorApi.Servidor -> "El servidor no pudo completar la operación. Inténtalo de nuevo"
     ErrorApi.SinConexion -> "Sin conexión con el servidor. Comprueba tu red e inténtalo de nuevo"
