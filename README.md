@@ -79,3 +79,14 @@ Archivos de esta sesión por source set:
 - `shared/src/commonMain/kotlin/pe/edu/upeu/pharmamobile/presentation/producto/ProductoUi.kt`, `TextoParaCompartir.kt`, `ProductoViewModel.kt` y `ProductoScreen.kt`: precio y acción visibles sin importar APIs de Android o UIKit.
 
 Evidencias Android: `evidencias/s09_practica/02-paso1-emulador-verificacion.png`, `03-precios-formateados-listado-android.png`, `04-detalle-producto-android.png` y `05-selector-compartir-android.png`. `01-expect-sin-actual-editor.png` muestra la declaración antes de añadir `actual`, pero no sustituye una captura del mensaje del compilador. Según la indicación del docente comunicada por el equipo, no se adjuntan capturas iOS porque no se dispone de macOS ni simulador iOS; el código iOS permanece sin verificación en Xcode.
+
+## Código específico de plataforma - actividad autónoma de la sesión 9
+
+El inventario completo y el informe comparativo se encuentran en `Unidad 2/Sesion 3/`. Las declaraciones `expect` del repositorio son `formatearSoles`, `InfoDispositivo`, `platformModule`, `getPlatform` y `loggerHttp`; cada una tiene su `actual` en `androidMain` e `iosMain`. `Compartidor` es una interfaz común con implementaciones nativas, no una declaración `expect`.
+
+- Moneda: `commonMain/platform/Formato.kt`; Android `platform/Formato.android.kt` (`NumberFormat`, `es-PE`); iOS `platform/Formato.ios.kt` (`NSNumberFormatter`, `es_PE`).
+- Información del dispositivo: `commonMain/platform/InfoDispositivo.kt`; Android `platform/InfoDispositivo.android.kt` (`Build.VERSION.RELEASE`); iOS `platform/InfoDispositivo.ios.kt` (`UIDevice`). La pantalla compartida muestra la información con «Acerca de este dispositivo».
+- Compartir producto: `commonMain/domain/platform/Compartidor.kt`; Android `platform/CompartidorAndroid.kt` (`Intent.ACTION_SEND` y `Context`); iOS `platform/CompartidorIos.kt` (`UIActivityViewController`). Koin selecciona la implementación en cada plataforma.
+- Inyección, identificación de plataforma y registro HTTP: `di/PlatformModule.*.kt`, `Platform.*.kt` y `data/remote/HttpLogger.*.kt` en sus respectivos source sets. Sus contratos comunes se indican con rutas completas en el inventario.
+
+En Windows se verificaron `:shared:testAndroidHostTest` y `:androidApp:assembleDebug`. No se afirma compilación ni ejecución iOS. El estudiante indicó que el docente dispensa el uso de iOS para esta entrega por no disponer de Mac.
