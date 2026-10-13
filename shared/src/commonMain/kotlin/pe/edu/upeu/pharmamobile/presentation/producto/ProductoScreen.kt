@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pe.edu.upeu.pharmamobile.presentation.components.ValidatedTextField
+import pe.edu.upeu.pharmamobile.platform.InfoDispositivo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +51,8 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
     val listState = rememberLazyListState()
     var categoriasAbiertas by remember { mutableStateOf(false) }
     var productoDetalle by remember { mutableStateOf<ProductoUi?>(null) }
+    var mostrarAcercaDe by remember { mutableStateOf(false) }
+    val infoDispositivo = remember { InfoDispositivo() }
     LaunchedEffect(formulario.editandoId) {
         if (formulario.editandoId != null) listState.animateScrollToItem(0)
     }
@@ -88,6 +91,22 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
         )
     }
 
+    if (mostrarAcercaDe) {
+        AlertDialog(
+            onDismissRequest = { mostrarAcercaDe = false },
+            title = { Text("Acerca de PharmaMobil") },
+            text = {
+                Column {
+                    Text("Sistema operativo: ${infoDispositivo.sistema}")
+                    Text("Versión: ${infoDispositivo.version}")
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { mostrarAcercaDe = false }) { Text("Cerrar") }
+            },
+        )
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         state = listState,
@@ -95,6 +114,7 @@ fun ProductoScreen(viewModel: ProductoViewModel) {
     ) {
         item {
             Text("PharmaMobil", style = MaterialTheme.typography.titleMedium)
+            TextButton(onClick = { mostrarAcercaDe = true }) { Text("Acerca de este dispositivo") }
             Text(
                 if (formulario.editandoId == null) "Registro de Producto" else "Editar producto #${formulario.editandoId}",
                 style = MaterialTheme.typography.headlineSmall,
