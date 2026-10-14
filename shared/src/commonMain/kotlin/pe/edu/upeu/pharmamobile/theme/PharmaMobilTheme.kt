@@ -14,41 +14,49 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF006A60),
+    primary = Color(0xFF08766C),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFF9FF2E4),
-    onPrimaryContainer = Color(0xFF00201C),
-    secondary = Color(0xFF4A635E),
+    primaryContainer = Color(0xFFD9F3ED),
+    onPrimaryContainer = Color(0xFF064A45),
+    secondary = Color(0xFF52726C),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFCDE8E1),
-    onSecondaryContainer = Color(0xFF06201C),
-    tertiary = Color(0xFF456179),
+    secondaryContainer = Color(0xFFE5F1ED),
+    onSecondaryContainer = Color(0xFF183D37),
+    tertiary = Color(0xFF446A85),
     onTertiary = Color.White,
-    background = Color(0xFFF5FBF8),
-    onBackground = Color(0xFF171D1B),
-    surface = Color(0xFFF5FBF8),
-    onSurface = Color(0xFF171D1B),
-    surfaceContainer = Color(0xFFE9F0ED),
-    error = Color(0xFFBA1A1A)
+    background = Color(0xFFF4F8F7),
+    onBackground = Color(0xFF142623),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF142623),
+    onSurfaceVariant = Color(0xFF657773),
+    surfaceContainer = Color(0xFFF0F5F3),
+    outline = Color(0xFFBACBC6),
+    error = Color(0xFFB3261E),
+    errorContainer = Color(0xFFFFE9E6),
+    onErrorContainer = Color(0xFF842017)
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF83D5C8),
-    onPrimary = Color(0xFF003731),
-    primaryContainer = Color(0xFF005048),
-    onPrimaryContainer = Color(0xFF9FF2E4),
+    primary = Color(0xFF79D8C8),
+    onPrimary = Color(0xFF063F39),
+    primaryContainer = Color(0xFF175C54),
+    onPrimaryContainer = Color(0xFFCBF5EC),
     secondary = Color(0xFFB1CCC5),
     onSecondary = Color(0xFF1C3530),
     secondaryContainer = Color(0xFF334B47),
     onSecondaryContainer = Color(0xFFCDE8E1),
     tertiary = Color(0xFFACCBE6),
     onTertiary = Color(0xFF143349),
-    background = Color(0xFF0E1513),
-    onBackground = Color(0xFFDDE4E1),
-    surface = Color(0xFF0E1513),
-    onSurface = Color(0xFFDDE4E1),
-    surfaceContainer = Color(0xFF1B2925),
-    error = Color(0xFFFFB4AB)
+    background = Color(0xFF0E1917),
+    onBackground = Color(0xFFE5F0ED),
+    surface = Color(0xFF172522),
+    onSurface = Color(0xFFE5F0ED),
+    onSurfaceVariant = Color(0xFFADC2BC),
+    surfaceContainer = Color(0xFF21332F),
+    outline = Color(0xFF647A73),
+    error = Color(0xFFFFB4AB),
+    errorContainer = Color(0xFF5E2522),
+    onErrorContainer = Color(0xFFFFDAD5)
 )
 
 private val PharmaTypography = Typography(
@@ -72,9 +80,9 @@ private val PharmaTypography = Typography(
 )
 
 private val PharmaShapes = Shapes(
-    small = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-    medium = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-    large = androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
+    small = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+    medium = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+    large = androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
 )
 
 @Composable

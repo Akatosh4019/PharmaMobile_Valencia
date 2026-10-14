@@ -1,5 +1,6 @@
 package pe.edu.upeu.pharmamobile
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -20,10 +22,13 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -36,6 +41,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -49,6 +55,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -65,6 +72,9 @@ import pe.edu.upeu.pharmamobile.presentation.producto.ProductoViewModel
 import pe.edu.upeu.pharmamobile.presentation.sesion.LoginScreen
 import pe.edu.upeu.pharmamobile.presentation.sesion.SesionViewModel
 import pe.edu.upeu.pharmamobile.theme.PharmaMobilTheme
+import org.jetbrains.compose.resources.painterResource
+import pharmamobile.shared.generated.resources.Res
+import pharmamobile.shared.generated.resources.pharmamobil_mark
 
 private const val COMPACT_MAX_WIDTH = 600
 private const val MEDIUM_MAX_WIDTH = 840
@@ -175,6 +185,7 @@ private fun CompactNavigation(
     ) {
         PharmaScaffold(
             pantallaActual = pantallaActual,
+            onPantallaSeleccionada = onPantallaSeleccionada,
             mostrarBotonMenu = true,
             onMenuClick = { scope.launch { drawerState.open() } }
         )
@@ -220,6 +231,7 @@ private fun MediumNavigation(
 
         PharmaScaffold(
             pantallaActual = pantallaActual,
+            onPantallaSeleccionada = onPantallaSeleccionada,
             mostrarBotonMenu = false,
             onMenuClick = {},
             modifier = Modifier
@@ -251,6 +263,7 @@ private fun ExpandedNavigation(
     ) {
         PharmaScaffold(
             pantallaActual = pantallaActual,
+            onPantallaSeleccionada = onPantallaSeleccionada,
             mostrarBotonMenu = false,
             onMenuClick = {}
         )
@@ -261,6 +274,7 @@ private fun ExpandedNavigation(
 @Composable
 private fun PharmaScaffold(
     pantallaActual: Screen,
+    onPantallaSeleccionada: (Screen) -> Unit,
     mostrarBotonMenu: Boolean,
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -269,7 +283,22 @@ private fun PharmaScaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(tituloPantalla(pantallaActual)) },
+                title = {
+                    Column {
+                        Text(
+                            tituloPantalla(pantallaActual),
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                        Text(
+                            "PharmaMobil",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
                 navigationIcon = {
                     if (mostrarBotonMenu) {
                         IconButton(onClick = onMenuClick) {
@@ -292,15 +321,54 @@ private fun PharmaScaffold(
                 .padding(paddingValues)
         ) {
             when (pantallaActual) {
-                Screen.Inicio -> InicioScreen()
+                Screen.Inicio -> InicioScreen(
+                    usuario = LocalSesion.current.nombreCompleto.ifBlank { LocalSesion.current.usuario },
+                    onAbrirProductos = { onPantallaSeleccionada(Screen.Productos) },
+                )
                 Screen.Productos -> ProductoScreen(
                     viewModel = koinViewModel<ProductoViewModel>(),
                     puedeEscribir = LocalSesion.current.puede("CATALOGO_ESCRIBIR")
                 )
                 Screen.Clientes -> if (LocalSesion.current.puede("CLIENTES_LEER")) ClienteScreen() else Text("No tienes permiso para ver clientes")
-                Screen.Pedidos -> Text(
-                    text = "Pantalla de pedidos en construcción",
-                    modifier = Modifier.padding(16.dp)
+                Screen.Pedidos -> PedidosPendientes()
+            }
+        }
+    }
+}
+
+@Composable
+private fun PedidosPendientes() {
+    Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+        Text("Pedidos", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            "Un espacio para tus operaciones de venta",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp, bottom = 22.dp),
+        )
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Icon(
+                    Icons.Default.ShoppingCart,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(34.dp),
+                )
+                Text(
+                    "Módulo en preparación",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(top = 14.dp),
+                )
+                Text(
+                    "La gestión de pedidos estará disponible en una próxima versión.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 6.dp),
                 )
             }
         }
@@ -317,7 +385,7 @@ private fun DrawerContent(
     Column(
         modifier = Modifier
             .fillMaxHeight()
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 14.dp)
     ) {
         DrawerHeader()
         destinosPermitidos(LocalSesion.current).forEach { destino ->
@@ -328,6 +396,7 @@ private fun DrawerContent(
                 icon = { Icon(destino.icono, contentDescription = destino.titulo) }
             )
         }
+        HorizontalDivider(modifier = Modifier.padding(top = 18.dp, bottom = 8.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -345,17 +414,26 @@ private fun DrawerContent(
 
 @Composable
 private fun DrawerHeader() {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 24.dp)
+            .padding(horizontal = 10.dp, vertical = 25.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            "PharmaMobil",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.primary
+        Image(
+            painter = painterResource(Res.drawable.pharmamobil_mark),
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.size(52.dp),
         )
-        Text("Gestión farmacéutica", style = MaterialTheme.typography.bodyMedium)
+        Column(modifier = Modifier.padding(start = 10.dp)) {
+            Text(
+                "PharmaMobil",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text("Gestión farmacéutica", style = MaterialTheme.typography.bodySmall)
+        }
     }
 }
 

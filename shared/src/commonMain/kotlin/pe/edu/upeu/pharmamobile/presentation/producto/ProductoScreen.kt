@@ -1,10 +1,14 @@
 package pe.edu.upeu.pharmamobile.presentation.producto
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -23,6 +27,12 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pe.edu.upeu.pharmamobile.presentation.components.ValidatedTextField
@@ -110,16 +121,53 @@ fun ProductoScreen(viewModel: ProductoViewModel, puedeEscribir: Boolean = true) 
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         state = listState,
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 18.dp, vertical = 18.dp),
     ) {
         item {
-            Text("PharmaMobil", style = MaterialTheme.typography.titleMedium)
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                shape = MaterialTheme.shapes.large,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        Icons.Outlined.Inventory2,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(32.dp),
+                    )
+                    Column(modifier = Modifier.padding(start = 14.dp)) {
+                        Text("Inventario", style = MaterialTheme.typography.titleLarge)
+                        Text(
+                            "Productos y existencias al día",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                }
+            }
             TextButton(onClick = { mostrarAcercaDe = true }) { Text("Acerca de este dispositivo") }
             if (puedeEscribir) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = MaterialTheme.shapes.large,
+            ) {
+            Column(modifier = Modifier.padding(18.dp)) {
             Text(
-                if (formulario.editandoId == null) "Registro de Producto" else "Editar producto #${formulario.editandoId}",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
+                if (formulario.editandoId == null) "Nuevo producto" else "Editar producto #${formulario.editandoId}",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 4.dp),
+            )
+            Text(
+                "Completa los datos del inventario",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 14.dp),
             )
 
             ValidatedTextField(formulario.nombre, viewModel::cambiarNombre, "Nombre", formulario.nombreError)
@@ -167,8 +215,10 @@ fun ProductoScreen(viewModel: ProductoViewModel, puedeEscribir: Boolean = true) 
             Button(
                 onClick = viewModel::guardar,
                 enabled = !guardando && uiState.categorias.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp).height(48.dp),
             ) {
+                Icon(Icons.Outlined.Add, contentDescription = null)
+                Spacer(Modifier.size(8.dp))
                 Text(if (guardando) "Guardando..." else if (formulario.editandoId == null) "Crear producto" else "Guardar cambios")
             }
             if (formulario.editandoId != null) {
@@ -193,19 +243,29 @@ fun ProductoScreen(viewModel: ProductoViewModel, puedeEscribir: Boolean = true) 
                 )
             }
             }
+            }
+            }
 
             Text(
                 text = "Inventario de productos",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 24.dp, bottom = 8.dp),
+                modifier = Modifier.padding(top = 24.dp, bottom = 2.dp),
+            )
+            Text(
+                "Explora, filtra y consulta tus productos",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 12.dp),
             )
 
-            Button(
+            OutlinedButton(
                 onClick = viewModel::cargarProductos,
                 enabled = uiState.fase !is ProductoFase.Cargando && !uiState.operando,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp),
             ) {
+                Icon(Icons.Outlined.Refresh, contentDescription = null)
+                Spacer(Modifier.size(8.dp))
                 Text("Actualizar lista")
             }
 
@@ -270,9 +330,11 @@ private fun ProductoItem(
     val producto = productoUi.producto
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = MaterialTheme.shapes.medium,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(18.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = producto.nombre,
@@ -280,15 +342,28 @@ private fun ProductoItem(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
                 )
-                Text(
-                    text = if (producto.activo) "Activo" else "Inactivo",
-                    color = if (producto.activo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.labelLarge,
-                )
+                Surface(
+                    color = if (producto.activo) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer,
+                    shape = MaterialTheme.shapes.small,
+                ) {
+                    Text(
+                        text = if (producto.activo) "Activo" else "Inactivo",
+                        color = if (producto.activo) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    )
+                }
             }
-            Text("Precio: ${productoUi.precioFormateado}", modifier = Modifier.padding(top = 6.dp))
-            Text("Stock: ${producto.stock}")
-            producto.categoriaNombre?.let { Text("Categoría: $it") }
+            Text(
+                productoUi.precioFormateado,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 10.dp),
+            )
+            Text("${producto.stock} unidades disponibles", style = MaterialTheme.typography.bodyMedium)
+            producto.categoriaNombre?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             if (producto.requiereReposicion()) {
                 Text(
                     text = if (producto.stock == 0) "Sin stock" else "Bajo stock",
@@ -297,7 +372,7 @@ private fun ProductoItem(
                     modifier = Modifier.padding(top = 4.dp),
                 )
             }
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
                 TextButton(onClick = onDetalle) { Text("Detalle") }
                 if (puedeEscribir) {
                 TextButton(onClick = onEditar, enabled = !operando) { Text("Editar") }
