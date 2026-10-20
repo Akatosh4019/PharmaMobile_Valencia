@@ -143,7 +143,6 @@ class ProductoViewModel(
                         filtro = if (!producto.activo) ProductoFiltro.INACTIVOS else ProductoFiltro.ACTIVOS,
                     )
                 }
-                recargarProductos(conservarListado = true)
             }.onFailure { error ->
                 manejarFallo(error)
             }
@@ -168,7 +167,6 @@ class ProductoViewModel(
                     _uiState.update {
                         it.copy(operacion = ProductoOperacion.Inactiva, mensajeResultado = "${producto.nombre} desactivado", filtro = ProductoFiltro.INACTIVOS)
                     }
-                    recargarProductos(conservarListado = true)
                 }
                 .onFailure { error ->
                     manejarFallo(error)
@@ -187,19 +185,20 @@ class ProductoViewModel(
         }
     }
 
-    fun cargarProductos() = recargarProductos(conservarListado = false)
+    fun cargarProductos() = recargarProductos()
 
-    private fun recargarProductos(conservarListado: Boolean) {
+    private fun recargarProductos() {
         if (_uiState.value.productos.isEmpty()) {
             _uiState.update { it.copy(fase = ProductoFase.Cargando) }
         }
         viewModelScope.launch {
             runCatching { repository.sincronizar() }
+                .onSuccess { _uiState.update { it.copy(avisoRed = null) } }
                 .onFailure { error ->
                     if (error is CancellationException) throw error
                     _uiState.update {
                         if (it.productos.isNotEmpty()) {
-                            it.copy(mensajeError = mensajeDe(error))
+                            it.copy(avisoRed = "Sin conexión con el servidor. Comprueba tu red e inténtalo de nuevo")
                         } else {
                             it.copy(fase = ProductoFase.Error(mensajeDe(error)))
                         }

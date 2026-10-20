@@ -1,6 +1,5 @@
 package pe.edu.upeu.pharmamobile.data.repository
 
-import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import pe.edu.upeu.pharmamobile.data.local.PharmaDatabase
@@ -13,17 +12,14 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class ProductoRepositorioOfflineTest {
-    private fun crearBase(): PharmaDatabase {
-        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-        PharmaDatabase.Schema.create(driver)
-        return PharmaDatabase(driver)
-    }
+/** Cada plataforma proporciona una base SQLite nueva para cada prueba. */
+internal expect fun crearBaseEnMemoria(): PharmaDatabase
 
+class ProductoRepositorioOfflineTest {
     @Test
     fun conRedLaSincronizacionActualizaLaBaseObservable() = runTest {
         val remoto = RemotoFalso().apply { productos += Producto(7, "Paracetamol", 15.5, 20) }
-        val repo = ProductoRepositorioOffline(remoto, crearBase())
+        val repo = ProductoRepositorioOffline(remoto, crearBaseEnMemoria())
         repo.sincronizar()
         assertEquals("Paracetamol", repo.observar().first().single().nombre)
     }
@@ -31,7 +27,7 @@ class ProductoRepositorioOfflineTest {
     @Test
     fun sinRedElProductoQuedaEnLaBaseConIdTemporal() = runTest {
         val remoto = RemotoFalso().apply { conectado = false }
-        val repo = ProductoRepositorioOffline(remoto, crearBase())
+        val repo = ProductoRepositorioOffline(remoto, crearBaseEnMemoria())
         val creado = repo.registrar(Producto(0, "Ibuprofeno", 4.5, 20, categoriaId = 1))
         assertTrue(creado.id < 0)
         assertEquals(creado, repo.observar().first().single())
@@ -40,7 +36,7 @@ class ProductoRepositorioOfflineTest {
     @Test
     fun alReconectarSubePendienteAntesDeBajarYConservaElProducto() = runTest {
         val remoto = RemotoFalso().apply { conectado = false }
-        val repo = ProductoRepositorioOffline(remoto, crearBase())
+        val repo = ProductoRepositorioOffline(remoto, crearBaseEnMemoria())
         repo.registrar(Producto(0, "Ibuprofeno", 4.5, 20, categoriaId = 1))
         remoto.conectado = true
         repo.sincronizar()

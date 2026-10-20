@@ -9,6 +9,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import pe.edu.upeu.pharmamobile.data.local.AlmacenSeguro
 import pe.edu.upeu.pharmamobile.data.local.EstadoSesion
+import pe.edu.upeu.pharmamobile.data.local.sesionVigenteSinRed
 import pe.edu.upeu.pharmamobile.data.remote.dto.LoginRequestDto
 import pe.edu.upeu.pharmamobile.data.remote.dto.LoginResponseDto
 import pe.edu.upeu.pharmamobile.data.remote.dto.UsuarioActualDto
@@ -57,6 +58,15 @@ class AuthRepositorioRest(
         } catch (error: Exception) {
             if (error is kotlinx.coroutines.CancellationException) throw error
             if (error is ErrorApiException && error.error == ErrorApi.NoAutenticado) {
+                estado.limpiar("Tu sesión expiró. Inicia sesión nuevamente")
+            } else if (error is ErrorApiException &&
+                error.error in setOf(ErrorApi.SinConexion, ErrorApi.TiempoAgotado)
+            ) {
+                val local = sesionVigenteSinRed(token)
+                if (local != null) {
+                    estado.activar(local)
+                    return local
+                }
                 estado.limpiar("Tu sesión expiró. Inicia sesión nuevamente")
             } else {
                 estado.finalizarInicio()

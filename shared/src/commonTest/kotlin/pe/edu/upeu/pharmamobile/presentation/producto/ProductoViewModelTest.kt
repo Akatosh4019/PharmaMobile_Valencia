@@ -209,7 +209,7 @@ class ProductoViewModelTest {
         assertEquals(false, viewModel.uiState.value.productos.single().activo)
         assertEquals(ProductoFiltro.INACTIVOS, viewModel.uiState.value.filtro)
         assertIs<ProductoOperacion.Inactiva>(viewModel.uiState.value.operacion)
-        assertEquals(2, repository.llamadasAListar)
+        assertEquals(1, repository.llamadasAListar)
     }
 
     @Test

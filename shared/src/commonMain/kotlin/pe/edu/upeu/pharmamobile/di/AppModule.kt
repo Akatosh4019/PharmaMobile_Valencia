@@ -11,7 +11,7 @@ import pe.edu.upeu.pharmamobile.data.remote.crearHttpClient
 import pe.edu.upeu.pharmamobile.data.repository.ProductoRepositorioRemoto
 import pe.edu.upeu.pharmamobile.data.repository.ProductoRepositorioOffline
 import pe.edu.upeu.pharmamobile.data.local.PharmaDatabase
-import app.cash.sqldelight.db.SqlDriver
+import pe.edu.upeu.pharmamobile.data.local.CreadorDeDriver
 import pe.edu.upeu.pharmamobile.domain.repository.ProductoRepository
 import pe.edu.upeu.pharmamobile.domain.usecase.RegistrarProductoUseCase
 import pe.edu.upeu.pharmamobile.domain.usecase.ObtenerProductoUseCase
@@ -30,7 +30,7 @@ val repositoryModule = module {
     single { crearHttpClient(get(), get(named("apiBaseUrl")), get(), get(), get(named("esDepuracion"))) }
     single<AuthRepository> { AuthRepositorioRest(get(), get(), get()) }
     single { ProductoApi(get()) }
-    single { PharmaDatabase(get<SqlDriver>()) }
+    single { PharmaDatabase(get<CreadorDeDriver>().crear()) }
     single<ProductoRepository> { ProductoRepositorioOffline(ProductoRepositorioRemoto(get()), get()) }
 }
 
