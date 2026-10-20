@@ -29,6 +29,17 @@ class ProductoViewModel(
     private var pantallaMostrada = false
 
     init {
+        viewModelScope.launch {
+            repository.observar().collect { productos ->
+                _uiState.update {
+                    it.copy(
+                        productos = productos,
+                        productosUi = productos.map { producto -> producto.toUi() },
+                        fase = if (productos.isEmpty()) ProductoFase.SinProductos else ProductoFase.ConProductos(productos),
+                    )
+                }
+            }
+        }
         cargarCategorias()
         cargarProductos()
     }
@@ -124,7 +135,8 @@ class ProductoViewModel(
                         formulario = ProductoFormularioUiState(),
                         operacion = ProductoOperacion.Inactiva,
                         mensajeResultado = if (formulario.editandoId == null) {
-                            "Producto ${producto.nombre} creado en el servidor"
+                            if (producto.id < 0) "Producto ${producto.nombre} guardado; pendiente de sincronizar"
+                            else "Producto ${producto.nombre} creado en el servidor"
                         } else {
                             "Producto ${producto.nombre} actualizado"
                         },
@@ -178,24 +190,15 @@ class ProductoViewModel(
     fun cargarProductos() = recargarProductos(conservarListado = false)
 
     private fun recargarProductos(conservarListado: Boolean) {
-        if (!conservarListado || _uiState.value.fase !is ProductoFase.ConProductos) {
+        if (_uiState.value.productos.isEmpty()) {
             _uiState.update { it.copy(fase = ProductoFase.Cargando) }
         }
         viewModelScope.launch {
-            runCatching { repository.listar() }
-                .onSuccess { productos ->
-                    _uiState.update {
-                        it.copy(
-                            productos = productos,
-                            productosUi = productos.map { producto -> producto.toUi() },
-                            fase = if (productos.isEmpty()) ProductoFase.SinProductos else ProductoFase.ConProductos(productos),
-                        )
-                    }
-                }
+            runCatching { repository.sincronizar() }
                 .onFailure { error ->
                     if (error is CancellationException) throw error
                     _uiState.update {
-                        if (conservarListado && it.fase is ProductoFase.ConProductos) {
+                        if (it.productos.isNotEmpty()) {
                             it.copy(mensajeError = mensajeDe(error))
                         } else {
                             it.copy(fase = ProductoFase.Error(mensajeDe(error)))

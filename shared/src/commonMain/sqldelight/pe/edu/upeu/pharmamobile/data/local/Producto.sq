@@ -1,0 +1,43 @@
+CREATE TABLE producto (
+  id INTEGER NOT NULL PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  precio REAL NOT NULL,
+  stock INTEGER NOT NULL,
+  activo INTEGER NOT NULL,
+  categoria_id INTEGER,
+  categoria_nombre TEXT,
+  pendiente INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE categoria (
+  id INTEGER NOT NULL PRIMARY KEY,
+  nombre TEXT NOT NULL
+);
+
+listarTodos:
+SELECT * FROM producto ORDER BY nombre;
+
+buscarPorId:
+SELECT * FROM producto WHERE id = ?;
+
+listarPendientes:
+SELECT * FROM producto WHERE pendiente = 1 ORDER BY id;
+
+idTemporalSiguiente:
+SELECT COALESCE(MIN(id), 0) - 1 FROM producto WHERE id < 0;
+
+guardarProducto:
+INSERT OR REPLACE INTO producto(id, nombre, precio, stock, activo, categoria_id, categoria_nombre, pendiente)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+eliminarProducto:
+DELETE FROM producto WHERE id = ?;
+
+eliminarSincronizados:
+DELETE FROM producto WHERE pendiente = 0;
+
+listarCategorias:
+SELECT * FROM categoria ORDER BY nombre;
+
+guardarCategoria:
+INSERT OR REPLACE INTO categoria(id, nombre) VALUES (?, ?);

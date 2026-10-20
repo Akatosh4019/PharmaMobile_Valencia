@@ -142,7 +142,7 @@ fun ProductoScreen(viewModel: ProductoViewModel, puedeEscribir: Boolean = true) 
                     Column(modifier = Modifier.padding(start = 14.dp)) {
                         Text("Inventario", style = MaterialTheme.typography.titleLarge)
                         Text(
-                            "Productos y existencias al día",
+                            "Inventario disponible incluso sin conexión",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
@@ -258,6 +258,14 @@ fun ProductoScreen(viewModel: ProductoViewModel, puedeEscribir: Boolean = true) 
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 12.dp),
             )
+            if (uiState.productos.isNotEmpty()) uiState.mensajeError?.let { error ->
+                Text(
+                    "Mostrando datos guardados. $error",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+            }
 
             OutlinedButton(
                 onClick = viewModel::cargarProductos,
@@ -360,6 +368,13 @@ private fun ProductoItem(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = 10.dp),
             )
+            if (producto.id < 0) {
+                Text(
+                    "Pendiente de sincronización",
+                    color = MaterialTheme.colorScheme.tertiary,
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
             Text("${producto.stock} unidades disponibles", style = MaterialTheme.typography.bodyMedium)
             producto.categoriaNombre?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
