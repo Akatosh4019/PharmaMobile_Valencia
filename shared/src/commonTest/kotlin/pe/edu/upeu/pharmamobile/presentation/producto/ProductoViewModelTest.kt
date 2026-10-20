@@ -1,6 +1,8 @@
 package pe.edu.upeu.pharmamobile.presentation.producto
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -251,6 +253,7 @@ private class ProductoRepositoryFalso(
     private val errorAlRegistrar: Throwable? = null,
 ) : ProductoRepository {
     private val productos = productosIniciales.toMutableList()
+    private val flujo = MutableStateFlow(productos.toList())
     var llamadasARegistrar: Int = 0
         private set
     var llamadasAListar: Int = 0
@@ -260,6 +263,13 @@ private class ProductoRepositoryFalso(
 
     fun agregarProducto(producto: Producto) {
         productos.add(producto)
+        flujo.value = productos.toList()
+    }
+
+    override fun observar(): Flow<List<Producto>> = flujo
+
+    override suspend fun sincronizar() {
+        flujo.value = listar()
     }
 
     override suspend fun registrar(producto: Producto): Producto {
@@ -267,6 +277,7 @@ private class ProductoRepositoryFalso(
         errorAlRegistrar?.let { throw it }
         val registrado = producto.copy(id = (productos.maxOfOrNull { it.id } ?: 0L) + 1L)
         productos.add(registrado)
+        flujo.value = productos.toList()
         return registrado
     }
 
@@ -285,11 +296,13 @@ private class ProductoRepositoryFalso(
         llamadasAActualizar++
         val indice = productos.indexOfFirst { it.id == producto.id }
         productos[indice] = producto
+        flujo.value = productos.toList()
         return producto
     }
 
     override suspend fun eliminar(id: Long) {
         val indice = productos.indexOfFirst { it.id == id }
         productos[indice] = productos[indice].copy(activo = false)
+        flujo.value = productos.toList()
     }
 }
