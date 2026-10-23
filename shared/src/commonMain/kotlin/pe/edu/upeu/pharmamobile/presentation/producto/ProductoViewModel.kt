@@ -24,7 +24,9 @@ class ProductoViewModel(
     private val eliminarProducto: EliminarProductoUseCase,
     private val compartidor: Compartidor,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(ProductoUiState())
+    private val _uiState = MutableStateFlow(ProductoUiState(
+        ultimaSincronizacionMillis = repository.ultimaSincronizacionMillis(),
+    ))
     val uiState = _uiState.asStateFlow()
     private var pantallaMostrada = false
 
@@ -193,7 +195,10 @@ class ProductoViewModel(
         }
         viewModelScope.launch {
             runCatching { repository.sincronizar() }
-                .onSuccess { _uiState.update { it.copy(avisoRed = null) } }
+                .onSuccess { _uiState.update { it.copy(
+                    avisoRed = null,
+                    ultimaSincronizacionMillis = repository.ultimaSincronizacionMillis(),
+                ) } }
                 .onFailure { error ->
                     if (error is CancellationException) throw error
                     _uiState.update {

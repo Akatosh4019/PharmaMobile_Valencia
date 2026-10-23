@@ -258,6 +258,12 @@ fun ProductoScreen(viewModel: ProductoViewModel, puedeEscribir: Boolean = true) 
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 12.dp),
             )
+            Text(
+                textoAntiguedadDatos(uiState.ultimaSincronizacionMillis),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
             if (uiState.productos.isNotEmpty()) uiState.avisoRed?.let { error ->
                 Text(
                     "Mostrando datos guardados. $error",

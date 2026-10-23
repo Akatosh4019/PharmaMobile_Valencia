@@ -14,4 +14,5 @@ interface ProductoRepository {
     suspend fun eliminar(id: Long)
     fun observar(): Flow<List<Producto>> = flow { emit(listar()) }
     suspend fun sincronizar() { listar() }
+    fun ultimaSincronizacionMillis(): Long? = null
 }

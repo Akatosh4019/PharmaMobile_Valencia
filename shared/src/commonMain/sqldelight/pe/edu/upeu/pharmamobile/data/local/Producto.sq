@@ -14,6 +14,11 @@ CREATE TABLE categoria (
   nombre TEXT NOT NULL
 );
 
+CREATE TABLE sincronizacion (
+  id INTEGER NOT NULL PRIMARY KEY CHECK (id = 1),
+  instante_millis INTEGER NOT NULL
+);
+
 listarTodos:
 SELECT * FROM producto ORDER BY nombre;
 
@@ -41,3 +46,9 @@ SELECT * FROM categoria ORDER BY nombre;
 
 guardarCategoria:
 INSERT OR REPLACE INTO categoria(id, nombre) VALUES (?, ?);
+
+ultimaSincronizacion:
+SELECT instante_millis FROM sincronizacion WHERE id = 1;
+
+guardarSincronizacion:
+INSERT OR REPLACE INTO sincronizacion(id, instante_millis) VALUES (1, ?);

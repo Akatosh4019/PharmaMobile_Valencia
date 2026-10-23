@@ -9,6 +9,7 @@ import pe.edu.upeu.pharmamobile.domain.error.ErrorApiException
 import pe.edu.upeu.pharmamobile.domain.model.Categoria
 import pe.edu.upeu.pharmamobile.domain.model.Producto
 import pe.edu.upeu.pharmamobile.domain.repository.ProductoRepository
+import kotlin.time.Clock
 
 /** La interfaz siempre lee SQLite. La red solo actualiza su contenido. */
 class ProductoRepositorioOffline(
@@ -20,6 +21,8 @@ class ProductoRepositorioOffline(
     override fun observar(): Flow<List<Producto>> = local.observar()
 
     override suspend fun listar(): List<Producto> = local.listar()
+
+    override fun ultimaSincronizacionMillis(): Long? = local.ultimaSincronizacionMillis()
 
     override suspend fun registrar(producto: Producto): Producto {
         val pendiente = local.guardarPendiente(producto)
@@ -77,6 +80,7 @@ class ProductoRepositorioOffline(
         }
         val recibidos = remoto.listar()
         local.reemplazarSincronizados(recibidos)
+        local.guardarSincronizacion(Clock.System.now().toEpochMilliseconds())
     }
 
     private fun Throwable.esSinConexion(): Boolean =

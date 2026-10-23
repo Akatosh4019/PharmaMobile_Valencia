@@ -24,6 +24,13 @@ class ProductoLocal(private val base: PharmaDatabase) {
     fun categorias(): List<Categoria> = consultas.listarCategorias().executeAsList()
         .map { Categoria(it.id, it.nombre) }
 
+    fun ultimaSincronizacionMillis(): Long? =
+        consultas.ultimaSincronizacion().executeAsOneOrNull()
+
+    fun guardarSincronizacion(instanteMillis: Long) {
+        consultas.guardarSincronizacion(instanteMillis)
+    }
+
     fun guardarCategorias(categorias: List<Categoria>) {
         base.transaction { categorias.forEach { consultas.guardarCategoria(it.id, it.nombre) } }
     }

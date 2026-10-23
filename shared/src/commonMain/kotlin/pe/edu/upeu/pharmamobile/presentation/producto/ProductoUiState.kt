@@ -48,6 +48,7 @@ data class ProductoUiState(
     val productoPendienteEliminar: Producto? = null,
     val mensajeError: String? = null,
     val avisoRed: String? = null,
+    val ultimaSincronizacionMillis: Long? = null,
     val mensajeResultado: String? = null,
     val filtro: ProductoFiltro = ProductoFiltro.ACTIVOS,
 ) {
