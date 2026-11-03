@@ -65,8 +65,9 @@ class ProductoLocal(private val base: PharmaDatabase) : ProductoColaLocalReposit
 
     fun intentos(id: Long): Int = consultas.intentosPorId(id).executeAsOneOrNull()?.toInt() ?: 0
 
-    override fun marcarFallida(id: Long, maxIntentos: Int, error: String) =
+    override fun marcarFallida(id: Long, maxIntentos: Int, error: String) {
         consultas.marcarFallida(maxIntentos.toLong(), error, id)
+    }
 
     override fun confirmarPendiente(idTemporal: Long, producto: Producto) = reemplazarPendiente(idTemporal, producto)
 

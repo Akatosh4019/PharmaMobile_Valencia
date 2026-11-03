@@ -103,4 +103,7 @@ class ProductoRepositorioOffline(
     }
 
     override suspend fun sincronizarResumen(): ResumenSincronizacion = sincronizador()
+
+    private fun Throwable.esSinConexion(): Boolean =
+        (this as? ErrorApiException)?.error in setOf(ErrorApi.SinConexion, ErrorApi.TiempoAgotado)
 }
