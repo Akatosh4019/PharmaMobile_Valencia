@@ -6,7 +6,9 @@ CREATE TABLE producto (
   activo INTEGER NOT NULL,
   categoria_id INTEGER,
   categoria_nombre TEXT,
-  pendiente INTEGER NOT NULL DEFAULT 0
+  pendiente INTEGER NOT NULL DEFAULT 0,
+  intentos INTEGER NOT NULL DEFAULT 0,
+  ultimo_error TEXT
 );
 
 CREATE TABLE categoria (
@@ -26,14 +28,33 @@ buscarPorId:
 SELECT * FROM producto WHERE id = ?;
 
 listarPendientes:
-SELECT * FROM producto WHERE pendiente = 1 ORDER BY id;
+SELECT * FROM producto WHERE pendiente = 1 AND intentos < ? ORDER BY id;
+
+contarPendientes:
+SELECT COUNT(*) FROM producto WHERE pendiente = 1 AND intentos < ?;
+
+contarFallidas:
+SELECT COUNT(*) FROM producto WHERE pendiente = 1 AND intentos >= ?;
+
+listarFallidas:
+SELECT id, nombre, intentos, ultimo_error FROM producto
+WHERE pendiente = 1 AND intentos >= ? ORDER BY id;
 
 idTemporalSiguiente:
 SELECT COALESCE(MIN(id), 0) - 1 FROM producto WHERE id < 0;
 
 guardarProducto:
-INSERT OR REPLACE INTO producto(id, nombre, precio, stock, activo, categoria_id, categoria_nombre, pendiente)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO producto(id, nombre, precio, stock, activo, categoria_id, categoria_nombre, pendiente, intentos, ultimo_error)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+sumarIntento:
+UPDATE producto SET intentos = intentos + 1, ultimo_error = ? WHERE id = ?;
+
+marcarFallida:
+UPDATE producto SET intentos = ?, ultimo_error = ? WHERE id = ?;
+
+intentosPorId:
+SELECT intentos FROM producto WHERE id = ?;
 
 eliminarProducto:
 DELETE FROM producto WHERE id = ?;

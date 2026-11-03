@@ -16,6 +16,8 @@ import pe.edu.upeu.pharmamobile.domain.platform.Compartidor
 import pe.edu.upeu.pharmamobile.domain.usecase.RegistrarProductoUseCase
 import pe.edu.upeu.pharmamobile.domain.usecase.ActualizarProductoUseCase
 import pe.edu.upeu.pharmamobile.domain.usecase.EliminarProductoUseCase
+import pe.edu.upeu.pharmamobile.domain.port.Telemetria
+import pe.edu.upeu.pharmamobile.domain.port.TelemetriaSilenciosa
 
 class ProductoViewModel(
     private val registrarProducto: RegistrarProductoUseCase,
@@ -23,6 +25,7 @@ class ProductoViewModel(
     private val actualizarProducto: ActualizarProductoUseCase,
     private val eliminarProducto: EliminarProductoUseCase,
     private val compartidor: Compartidor,
+    private val telemetria: Telemetria = TelemetriaSilenciosa,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ProductoUiState(
         ultimaSincronizacionMillis = repository.ultimaSincronizacionMillis(),
@@ -40,6 +43,16 @@ class ProductoViewModel(
                         fase = if (productos.isEmpty()) ProductoFase.SinProductos else ProductoFase.ConProductos(productos),
                     )
                 }
+            }
+        }
+        viewModelScope.launch {
+            repository.observarPendientes().collect { cantidad ->
+                _uiState.update { it.copy(pendientesPorEnviar = cantidad) }
+            }
+        }
+        viewModelScope.launch {
+            repository.observarFallidasDetalle().collect { filas ->
+                _uiState.update { it.copy(filasFallidas = filas) }
             }
         }
         cargarCategorias()
@@ -190,22 +203,43 @@ class ProductoViewModel(
     fun cargarProductos() = recargarProductos()
 
     private fun recargarProductos() {
+        if (_uiState.value.sincronizacionEnCurso) return
         if (_uiState.value.productos.isEmpty()) {
             _uiState.update { it.copy(fase = ProductoFase.Cargando) }
         }
+        _uiState.update { it.copy(sincronizacionEnCurso = true) }
         viewModelScope.launch {
-            runCatching { repository.sincronizar() }
-                .onSuccess { _uiState.update { it.copy(
-                    avisoRed = null,
-                    ultimaSincronizacionMillis = repository.ultimaSincronizacionMillis(),
-                ) } }
+            runCatching { repository.sincronizarResumen() }
+                .onSuccess { resumen ->
+                    runCatching {
+                        telemetria.registrarEvento(
+                            "sincronizacion_completada",
+                            mapOf("pantalla" to "productos", "operacion" to "sincronizar"),
+                        )
+                    }
+                    _uiState.update { it.copy(
+                        avisoRed = null,
+                        ultimaSincronizacionMillis = repository.ultimaSincronizacionMillis(),
+                        sincronizacionEnCurso = false,
+                        resumenSincronizacion = resumen,
+                    ) }
+                }
                 .onFailure { error ->
                     if (error is CancellationException) throw error
+                    runCatching {
+                        telemetria.registrarError(
+                            error,
+                            mapOf("pantalla" to "productos", "operacion" to "sincronizar"),
+                        )
+                    }
                     _uiState.update {
                         if (it.productos.isNotEmpty()) {
-                            it.copy(avisoRed = "Sin conexión con el servidor. Comprueba tu red e inténtalo de nuevo")
+                            it.copy(
+                                avisoRed = "Sin conexión con el servidor. Comprueba tu red e inténtalo de nuevo",
+                                sincronizacionEnCurso = false,
+                            )
                         } else {
-                            it.copy(fase = ProductoFase.Error(mensajeDe(error)))
+                            it.copy(fase = ProductoFase.Error(mensajeDe(error)), sincronizacionEnCurso = false)
                         }
                     }
                 }
@@ -214,6 +248,19 @@ class ProductoViewModel(
 
     private fun manejarFallo(fallo: Throwable) {
         if (fallo is CancellationException) throw fallo
+        val tipoError = (fallo as? ErrorApiException)?.error?.let { it::class.simpleName } ?: "ErrorDesconocido"
+        val operacion = when (( _uiState.value.operacion as? ProductoOperacion.EnCurso)?.tipo) {
+            ProductoOperacion.Tipo.CREAR -> "crear_producto"
+            ProductoOperacion.Tipo.ACTUALIZAR -> "actualizar_producto"
+            ProductoOperacion.Tipo.DESACTIVAR -> "desactivar_producto"
+            null -> "sincronizar_productos"
+        }
+        runCatching {
+            telemetria.registrarError(
+                fallo,
+                mapOf("pantalla" to "productos", "operacion" to operacion, "tipo_error" to tipoError),
+            )
+        }
         val error = (fallo as? ErrorApiException)?.error
         if (error is ErrorApi.Validacion) {
             _uiState.update { actual ->

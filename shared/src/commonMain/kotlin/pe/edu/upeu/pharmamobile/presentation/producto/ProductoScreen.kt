@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pe.edu.upeu.pharmamobile.presentation.components.ValidatedTextField
 import pe.edu.upeu.pharmamobile.platform.InfoDispositivo
+import pe.edu.upeu.pharmamobile.domain.model.ProductoFallido
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -264,6 +265,34 @@ fun ProductoScreen(viewModel: ProductoViewModel, puedeEscribir: Boolean = true) 
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
+            Text(
+                "${uiState.pendientesPorEnviar} cambios pendientes de sincronizar · " +
+                    "${uiState.filasFallidas.size} requieren revisión",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (uiState.filasFallidas.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant
+                    else MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+            uiState.resumenSincronizacion?.let { resumen ->
+                Text(
+                    "Última sincronización: ${resumen.enviadas} enviados, ${resumen.pendientes} pendientes, ${resumen.fallidas} fallidos",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+            }
+            uiState.filasFallidas.forEach { fallo ->
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                ) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text("Revisar: ${fallo.nombre}", style = MaterialTheme.typography.titleSmall)
+                        Text("Intentos: ${fallo.intentos}", style = MaterialTheme.typography.bodySmall)
+                        Text(fallo.ultimoError ?: "El servidor rechazó el envío", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
             if (uiState.productos.isNotEmpty()) uiState.avisoRed?.let { error ->
                 Text(
                     "Mostrando datos guardados. $error",
@@ -275,12 +304,12 @@ fun ProductoScreen(viewModel: ProductoViewModel, puedeEscribir: Boolean = true) 
 
             OutlinedButton(
                 onClick = viewModel::cargarProductos,
-                enabled = uiState.fase !is ProductoFase.Cargando && !uiState.operando,
+                enabled = uiState.fase !is ProductoFase.Cargando && !uiState.operando && !uiState.sincronizacionEnCurso,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp),
             ) {
                 Icon(Icons.Outlined.Refresh, contentDescription = null)
                 Spacer(Modifier.size(8.dp))
-                Text("Actualizar lista")
+                Text(if (uiState.sincronizacionEnCurso) "Sincronizando…" else "Actualizar lista")
             }
 
             PrimaryTabRow(selectedTabIndex = filtros.indexOf(uiState.filtro)) {
@@ -312,6 +341,7 @@ fun ProductoScreen(viewModel: ProductoViewModel, puedeEscribir: Boolean = true) 
                     items(uiState.productosUiFiltrados, key = { it.producto.id }) { productoUi ->
                         ProductoItem(
                             productoUi = productoUi,
+                            fallido = uiState.filasFallidas.firstOrNull { it.id == productoUi.producto.id },
                             onEditar = { viewModel.editar(productoUi.producto) },
                             onEliminar = { viewModel.solicitarEliminar(productoUi.producto) },
                             onDetalle = { productoDetalle = productoUi },
@@ -334,6 +364,7 @@ fun ProductoScreen(viewModel: ProductoViewModel, puedeEscribir: Boolean = true) 
 @Composable
 private fun ProductoItem(
     productoUi: ProductoUi,
+    fallido: ProductoFallido?,
     onEditar: () -> Unit,
     onEliminar: () -> Unit,
     onDetalle: () -> Unit,
@@ -374,7 +405,13 @@ private fun ProductoItem(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = 10.dp),
             )
-            if (producto.id < 0) {
+            if (fallido != null) {
+                Text(
+                    "No se sincronizó tras ${fallido.intentos} intentos",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            } else if (producto.id < 0) {
                 Text(
                     "Pendiente de sincronización",
                     color = MaterialTheme.colorScheme.tertiary,

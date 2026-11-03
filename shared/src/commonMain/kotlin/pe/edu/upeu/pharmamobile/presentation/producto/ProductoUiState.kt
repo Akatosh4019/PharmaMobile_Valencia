@@ -2,6 +2,8 @@ package pe.edu.upeu.pharmamobile.presentation.producto
 
 import pe.edu.upeu.pharmamobile.domain.model.Producto
 import pe.edu.upeu.pharmamobile.domain.model.Categoria
+import pe.edu.upeu.pharmamobile.domain.model.ProductoFallido
+import pe.edu.upeu.pharmamobile.domain.model.ResumenSincronizacion
 
 sealed interface ProductoFase {
     data object Cargando : ProductoFase
@@ -49,6 +51,10 @@ data class ProductoUiState(
     val mensajeError: String? = null,
     val avisoRed: String? = null,
     val ultimaSincronizacionMillis: Long? = null,
+    val sincronizacionEnCurso: Boolean = false,
+    val pendientesPorEnviar: Int = 0,
+    val filasFallidas: List<ProductoFallido> = emptyList(),
+    val resumenSincronizacion: ResumenSincronizacion? = null,
     val mensajeResultado: String? = null,
     val filtro: ProductoFiltro = ProductoFiltro.ACTIVOS,
 ) {

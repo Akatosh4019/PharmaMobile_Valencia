@@ -12,7 +12,12 @@ import pe.edu.upeu.pharmamobile.data.repository.ProductoRepositorioRemoto
 import pe.edu.upeu.pharmamobile.data.repository.ProductoRepositorioOffline
 import pe.edu.upeu.pharmamobile.data.local.PharmaDatabase
 import pe.edu.upeu.pharmamobile.data.local.CreadorDeDriver
+import pe.edu.upeu.pharmamobile.data.local.ProductoLocal
+import pe.edu.upeu.pharmamobile.data.repository.ProductoRemotoSyncAdapter
 import pe.edu.upeu.pharmamobile.domain.repository.ProductoRepository
+import pe.edu.upeu.pharmamobile.domain.repository.ProductoColaLocalRepository
+import pe.edu.upeu.pharmamobile.domain.repository.ProductoRemotoSyncRepository
+import pe.edu.upeu.pharmamobile.domain.usecase.SincronizarUseCase
 import pe.edu.upeu.pharmamobile.domain.usecase.RegistrarProductoUseCase
 import pe.edu.upeu.pharmamobile.domain.usecase.ObtenerProductoUseCase
 import pe.edu.upeu.pharmamobile.domain.usecase.ActualizarProductoUseCase
@@ -24,14 +29,29 @@ import pe.edu.upeu.pharmamobile.domain.repository.AuthRepository
 import pe.edu.upeu.pharmamobile.domain.usecase.IniciarSesionUseCase
 import pe.edu.upeu.pharmamobile.domain.usecase.CerrarSesionUseCase
 import pe.edu.upeu.pharmamobile.presentation.sesion.SesionViewModel
+import pe.edu.upeu.pharmamobile.data.firebase.TelemetriaFirebase
+import pe.edu.upeu.pharmamobile.domain.port.Telemetria
 
 val repositoryModule = module {
     single { EstadoSesion(get()) }
+    single<Telemetria> { TelemetriaFirebase() }
     single { crearHttpClient(get(), get(named("apiBaseUrl")), get(), get(), get(named("esDepuracion"))) }
     single<AuthRepository> { AuthRepositorioRest(get(), get(), get()) }
     single { ProductoApi(get()) }
     single { PharmaDatabase(get<CreadorDeDriver>().crear()) }
-    single<ProductoRepository> { ProductoRepositorioOffline(ProductoRepositorioRemoto(get()), get()) }
+    single { ProductoLocal(get()) }
+    single<ProductoColaLocalRepository> { get<ProductoLocal>() }
+    single { ProductoRepositorioRemoto(get()) }
+    single<ProductoRemotoSyncRepository> { ProductoRemotoSyncAdapter(get<ProductoRepositorioRemoto>()) }
+    factory { SincronizarUseCase(get(), get()) }
+    single<ProductoRepository> {
+        ProductoRepositorioOffline(
+            remoto = get<ProductoRepositorioRemoto>(),
+            base = get<PharmaDatabase>(),
+            localCompartido = get<ProductoLocal>(),
+            sincronizarCompartido = get<SincronizarUseCase>(),
+        )
+    }
 }
 
 val useCaseModule = module {
@@ -45,7 +65,7 @@ val useCaseModule = module {
 
 val viewModelModule = module {
     viewModel { SesionViewModel(get(), get(), get(), get()) }
-    viewModel { ProductoViewModel(get(), get(), get(), get(), get()) }
+    viewModel { ProductoViewModel(get(), get(), get(), get(), get(), get()) }
 }
 
 expect val platformModule: Module

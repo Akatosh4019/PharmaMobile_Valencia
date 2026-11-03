@@ -5,6 +5,11 @@ plugins {
     alias(libs.plugins.composeCompiler)
 }
 
+// El plugin se activa al añadir la configuración privada de Firebase descargada desde la consola.
+if (file("google-services.json").isFile) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_11
