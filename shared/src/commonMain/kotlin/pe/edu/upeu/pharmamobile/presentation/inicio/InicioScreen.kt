@@ -17,24 +17,41 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import kotlinx.coroutines.launch
+import pe.edu.upeu.pharmamobile.domain.permiso.EstadoPermiso
+import pe.edu.upeu.pharmamobile.domain.permiso.GestorPermisos
+import pe.edu.upeu.pharmamobile.domain.permiso.Permiso
 import org.jetbrains.compose.resources.painterResource
 import pharmamobile.shared.generated.resources.Res
 import pharmamobile.shared.generated.resources.pharmamobil_mark
 
 @Composable
-fun InicioScreen(usuario: String, onAbrirProductos: () -> Unit) {
+fun InicioScreen(usuario: String, onAbrirProductos: () -> Unit, gestorPermisos: GestorPermisos) {
     val nombreCorto = usuario.substringBefore(' ').ifBlank { usuario }
+    var estadoCamara by remember { mutableStateOf<EstadoPermiso>(EstadoPermiso.Denegado) }
+    val scope = rememberCoroutineScope()
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        scope.launch { estadoCamara = gestorPermisos.estado(Permiso.CAMARA) }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -83,6 +100,40 @@ fun InicioScreen(usuario: String, onAbrirProductos: () -> Unit) {
                 Spacer(Modifier.height(20.dp))
                 Button(onClick = onAbrirProductos, modifier = Modifier.fillMaxWidth()) {
                     Text("Ver inventario")
+                }
+            }
+        }
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(18.dp)) {
+                Text("Permiso nativo de cámara", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    when (estadoCamara) {
+                        EstadoPermiso.Concedido -> "Permiso concedido. Esta práctica no captura imágenes."
+                        EstadoPermiso.Denegado -> "El permiso está denegado. Puedes decidir si lo concedes."
+                        EstadoPermiso.DenegadoParaSiempre -> "El permiso fue bloqueado. Puedes habilitarlo desde Ajustes."
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                )
+                OutlinedButton(
+                    onClick = {
+                        scope.launch {
+                            if (estadoCamara == EstadoPermiso.DenegadoParaSiempre) {
+                                gestorPermisos.abrirAjustes()
+                            } else {
+                                estadoCamara = gestorPermisos.solicitar(Permiso.CAMARA)
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(if (estadoCamara == EstadoPermiso.DenegadoParaSiempre) "Abrir ajustes" else "Solicitar permiso")
                 }
             }
         }

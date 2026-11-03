@@ -63,6 +63,8 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.koin.compose.KoinContext
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.compose.koinInject
+import pe.edu.upeu.pharmamobile.domain.permiso.GestorPermisos
 import pe.edu.upeu.pharmamobile.navigation.Screen
 import pe.edu.upeu.pharmamobile.domain.model.Sesion
 import pe.edu.upeu.pharmamobile.presentation.cliente.ClienteScreen
@@ -279,6 +281,7 @@ private fun PharmaScaffold(
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val gestorPermisos = koinInject<GestorPermisos>()
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -324,6 +327,7 @@ private fun PharmaScaffold(
                 Screen.Inicio -> InicioScreen(
                     usuario = LocalSesion.current.nombreCompleto.ifBlank { LocalSesion.current.usuario },
                     onAbrirProductos = { onPantallaSeleccionada(Screen.Productos) },
+                    gestorPermisos = gestorPermisos,
                 )
                 Screen.Productos -> ProductoScreen(
                     viewModel = koinViewModel<ProductoViewModel>(),

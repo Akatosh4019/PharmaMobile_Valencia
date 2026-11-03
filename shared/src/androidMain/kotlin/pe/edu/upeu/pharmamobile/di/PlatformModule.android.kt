@@ -13,8 +13,13 @@ import pe.edu.upeu.pharmamobile.domain.platform.Compartidor
 import pe.edu.upeu.pharmamobile.platform.CompartidorAndroid
 import pe.edu.upeu.pharmamobile.data.local.CreadorDeDriver
 import pe.edu.upeu.pharmamobile.data.local.CreadorDeDriverAndroid
+import pe.edu.upeu.pharmamobile.domain.permiso.GestorPermisos
+import pe.edu.upeu.pharmamobile.platform.GestorPermisosAndroid
+import pe.edu.upeu.pharmamobile.platform.PuentePermisosAndroid
 
 actual val platformModule: Module = module {
+    single { PuentePermisosAndroid() }
+    single<GestorPermisos> { GestorPermisosAndroid(androidContext(), get()) }
     single<CreadorDeDriver> { CreadorDeDriverAndroid(androidContext()) }
     single<HttpClientEngine> { OkHttp.create() }
     single(named("apiBaseUrl")) { "http://10.0.2.2:8080/api/v1/" }
