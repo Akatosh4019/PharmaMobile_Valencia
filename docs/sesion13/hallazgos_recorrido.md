@@ -4,7 +4,7 @@
 
 | Paso | Acción del usuario | Resultado esperado | Resultado observado | ¿Hay brecha? | Nota o decisión |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Abrir la aplicación e iniciar sesión | La app muestra inicio o un error recuperable | Pendiente de recorrido | Pendiente | |
+| 1 | Abrir la aplicación e iniciar sesión | La app muestra inicio o un error recuperable | Con credenciales de demostración rechazadas, el backend respondió 401 y la app mostró “Usuario o contraseña incorrectos” | Sin brecha en el rechazo | No se pudo comprobar acceso válido porque el backend activo no acepta la cuenta de demostración documentada |
 | 2 | Consultar el inventario con conexión | Se muestran los productos recibidos del backend | Pendiente de recorrido | Pendiente | |
 | 3 | Crear un producto con conexión | El producto queda guardado y aparece en la lista | Pendiente de recorrido | Pendiente | |
 | 4 | Crear un producto sin conexión | El producto queda guardado localmente y marcado pendiente | Pendiente de recorrido | Pendiente | |
@@ -24,7 +24,7 @@ Al finalizar el recorrido se reemplazan las celdas “Pendiente de recorrido” 
 
 ## Requisito para activar Firebase
 
-La integración de Crashlytics ya está detrás de `Telemetria`, pero este clon no incluye credenciales de Firebase. Para recibir informes reales, se debe registrar la aplicación en un proyecto Firebase y añadir los archivos de configuración privados: `androidApp/google-services.json` para Android y `GoogleService-Info.plist` para iOS. No se versionan esos archivos. Sin configuración, la aplicación conserva el adaptador y los fallos de inicialización del SDK no interrumpen el flujo normal.
+La app Android está registrada en el proyecto Firebase `pharmamobil-valencia`; `androidApp/google-services.json` coincide con `pe.edu.upeu.pharmamobile`. Gradle procesa ese archivo y aplica los plugins de Google Services y Crashlytics. Para recibir reportes, habilita Crashlytics en la consola y ejecuta la app. iOS se omite según la indicación del profesor.
 
 ## Consideración de reintentos
 
@@ -32,4 +32,4 @@ La API actual crea productos mediante `POST` y no ofrece clave de idempotencia. 
 
 ## Verificación pendiente
 
-No se ejecutaron pruebas automatizadas, compilaciones ni recorridos de interfaz por solicitud del usuario. Roberto realizará las pruebas manuales y compartirá cualquier fallo reproducible; entonces se actualizará la tabla y se corregirá el código correspondiente.
+Verificado en Windows: `:shared:testAndroidHostTest` y `:androidApp:assembleDebug` pasaron con la configuración Firebase Android. El APK se instaló y abrió en el emulador sin excepción fatal; se comprobó el rechazo de credenciales inválidas (401). El acceso válido, cámara y sincronización manual siguen pendientes de un backend y cuenta de prueba compatibles. iOS se omite por instrucción del profesor.

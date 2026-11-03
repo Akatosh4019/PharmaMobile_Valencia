@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "217576144244",
+    "project_id": "pharmamobil-valencia",
+    "storage_bucket": "pharmamobil-valencia.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:217576144244:android:afac7ddc5f66fd457b4021",
+        "android_client_info": {
+          "package_name": "pe.edu.upeu.pharmamobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBj59mMucPefnvRAdbk-6SzUGX2hrhUcRc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

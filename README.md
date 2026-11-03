@@ -119,7 +119,7 @@ El caso de sincronización está en `shared/src/commonMain/kotlin/pe/edu/upeu/ph
 
 ### Configuración Firebase
 
-Para activar Crashlytics con una instancia real, registra Android e iOS en un proyecto Firebase y coloca los archivos privados de configuración en las ubicaciones indicadas en `docs/sesion13/hallazgos_recorrido.md`. Esos archivos no se incluyen en Git. La app puede ejecutarse sin ellos, pero no se recibirán reportes remotos.
+La app Android está registrada en el proyecto Firebase `pharmamobil-valencia`; `androidApp/google-services.json` contiene la configuración de `pe.edu.upeu.pharmamobile`. Gradle aplica Google Services y Crashlytics cuando el archivo existe. Para recibir reportes, habilita Crashlytics en la consola y ejecuta la app. iOS se omite según la indicación del profesor.
 
 ### Guía de recorrido manual
 
@@ -131,4 +131,4 @@ Para activar Crashlytics con una instancia real, registra Android e iOS en un pr
 6. Desactiva modo avión, pulsa **Actualizar lista** y confirma que el pendiente desaparezca, el resumen cambie y el producto exista en el servidor.
 7. Si aparece un error, anota la acción, el texto mostrado y si el dato sigue en pantalla. Completa `docs/sesion13/hallazgos_recorrido.md` con el resultado real y envíame los pasos para reproducirlo.
 
-No se ejecutaron pruebas ni compilaciones para esta entrega de trabajo, siguiendo la indicación de dejar esas verificaciones al usuario. La comprobación de la plataforma iOS requiere macOS y Xcode. La API todavía no implementa claves de idempotencia para `POST`; el riesgo de respuesta perdida y duplicación está anotado en el informe de recorrido.
+Verificación en Windows: `:shared:testAndroidHostTest` y `:androidApp:assembleDebug` pasaron con Firebase Android configurado. El APK se instaló y abrió en el emulador; se comprobó que credenciales inválidas producen HTTP 401 y un mensaje recuperable. El acceso válido y la sincronización dentro de la app requieren un backend con una cuenta de prueba aceptada. La API no implementa claves de idempotencia para `POST`; el riesgo de respuesta perdida y duplicación está anotado en el informe. iOS se omite según la indicación del profesor.
