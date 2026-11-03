@@ -112,3 +112,23 @@ La rama `feature/offline-first-valencia` incorpora SQLDelight y SQLite como fuen
 Android abre `pharmamobile.db` con `AndroidSqliteDriver`; iOS declara `NativeSqliteDriver` en su módulo de plataforma. Las tres pruebas de `ProductoRepositorioOfflineTest` están en `shared/src/commonTest`: sincronización con red, creación sin red y subida antes de la descarga al reconectar. Cada prueba usa una base SQLite nueva en memoria, proporcionada por su plataforma de test. En Windows se ejecutan con `./gradlew.bat :shared:testAndroidHostTest :androidApp:assembleDebug`; la compilación y ejecución iOS requieren macOS/Xcode.
 
 Para comprobar el ciclo manual, inicia sesión y sincroniza con PharmaSoft encendido. Cierra y vuelve a abrir la app con la API detenida o el emulador sin conexión: el inventario guardado debe seguir visible con un aviso si el JWT aún no ha expirado. Una sesión expirada siempre exige volver a iniciar sesión. Crea un producto: aparece con «Pendiente de sincronización». Recupera la conexión y pulsa «Actualizar lista»; la marca desaparece. Verifica además en Swagger `GET /api/v1/productos` con JWT que el producto recibió un ID positivo. El token se envía mediante el cliente Ktor autenticado existente; SQLite no almacena el JWT.
+
+## Sesión 13 - robustez y recorrido del proyecto
+
+El caso de sincronización está en `shared/src/commonMain/kotlin/pe/edu/upeu/pharmamobile/domain/usecase/SincronizarUseCase.kt`. SQLDelight conserva el contador de intentos y el último error; la pantalla muestra los cambios pendientes y registros que requieren revisión. `domain/permiso/GestorPermisos.kt` define los estados de permiso compartidos; `GestorPermisosAndroid.kt` y `GestorPermisosIos.kt` conectan con el sistema operativo. La telemetría se abstrae en `domain/port/Telemetria.kt` y el adaptador Firebase se encuentra en `data/firebase/TelemetriaFirebase.kt`.
+
+### Configuración Firebase
+
+Para activar Crashlytics con una instancia real, registra Android e iOS en un proyecto Firebase y coloca los archivos privados de configuración en las ubicaciones indicadas en `docs/sesion13/hallazgos_recorrido.md`. Esos archivos no se incluyen en Git. La app puede ejecutarse sin ellos, pero no se recibirán reportes remotos.
+
+### Guía de recorrido manual
+
+1. Abre PharmaSoft con Docker y después ejecuta `androidApp` desde Android Studio.
+2. Inicia sesión y revisa que el inventario cargue y muestre la hora relativa de actualización.
+3. En Inicio, pulsa **Solicitar permiso**. Prueba concederlo y denegarlo; si Android lo bloquea, usa **Abrir ajustes**, cambia el permiso y vuelve a la app.
+4. En Productos, registra un producto mientras hay conexión y confirma que aparezca.
+5. Activa modo avión, registra otro producto y confirma que aparezca como pendiente sin que la pantalla se cierre.
+6. Desactiva modo avión, pulsa **Actualizar lista** y confirma que el pendiente desaparezca, el resumen cambie y el producto exista en el servidor.
+7. Si aparece un error, anota la acción, el texto mostrado y si el dato sigue en pantalla. Completa `docs/sesion13/hallazgos_recorrido.md` con el resultado real y envíame los pasos para reproducirlo.
+
+No se ejecutaron pruebas ni compilaciones para esta entrega de trabajo, siguiendo la indicación de dejar esas verificaciones al usuario. La comprobación de la plataforma iOS requiere macOS y Xcode. La API todavía no implementa claves de idempotencia para `POST`; el riesgo de respuesta perdida y duplicación está anotado en el informe de recorrido.
