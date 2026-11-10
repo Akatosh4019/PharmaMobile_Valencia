@@ -1,5 +1,19 @@
 # PharmaMobil - cliente Ktor y gestión de productos
 
+## Builds Android firmados (Sesión 14)
+
+La clave de entrega se guarda fuera del repositorio. Crea `keystore.properties` en la raíz local del proyecto usando `keystore.properties.example` como guía; ese archivo, los almacenes `.jks` y `.keystore` están excluidos de Git. No compartas las contraseñas ni subas el archivo de clave.
+
+La variante `phone` usa la URL local `http://172.17.26.36:8080/api/v1/` configurada para esta prueba; requiere que el teléfono y PharmaSoft estén en la misma red y que Docker siga ejecutándose. La comunicación HTTP no cifra credenciales, por lo que esta configuración es solo para una red de laboratorio.
+
+Para generar los artefactos firmados después de crear el almacén y completar `keystore.properties`:
+
+```powershell
+.\gradlew.bat :androidApp:assemblePhoneRelease :androidApp:bundlePhoneRelease
+```
+
+El APK instalable se genera en `androidApp/build/outputs/apk/phone/release/` y el AAB en `androidApp/build/outputs/bundle/phoneRelease/`. La versión declarada es `versionCode 1`, `versionName 1.0.0`, con `applicationId pe.edu.upeu.pharmamobile`. Para esta entrega se deja la minificación desactivada para validar primero el recorrido firmado; si se activa después, debe repetirse el recorrido completo de la versión de entrega.
+
 Aplicación Kotlin Multiplatform con Compose, Clean Architecture y MVVM. En esta sesión, la pantalla de productos obtiene su listado del backend PharmaSoft mediante Ktor. Android y iOS comparten DTO, mapper, repositorio y ViewModel; cada plataforma aporta su motor HTTP y URL base.
 
 ## Requisitos y ejecución

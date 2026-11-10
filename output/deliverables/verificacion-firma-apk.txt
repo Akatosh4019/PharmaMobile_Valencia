@@ -1,0 +1,17 @@
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): false
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=Roberto Samuel Valencia Saavedra, OU=Universidad Peruana Union, O=Universidad Peruana Union, L=Lima, ST=Lima, C=PE
+Signer #1 certificate SHA-256 digest: ed6d3c05727b17c6d9eab9c716fd3967b5bba793e233ef1e2b5df6124335ac80
+Signer #1 certificate SHA-1 digest: d06d4db7d98a818819ee179891d7b9d5b94fd432
+Signer #1 certificate MD5 digest: 26d1eb2aae89ae9de9b1601600303290
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 2048
+Signer #1 public key SHA-256 digest: be2a0e914801bfa8e85d3bc8cc29ff61fb8c96b902e60b1446ffe9897e5d19c1
+Signer #1 public key SHA-1 digest: 3cadb4a69a129b785962fd99de734d5df7178c09
+Signer #1 public key MD5 digest: 45f13e06394ad6630a7f3fbad4aca345

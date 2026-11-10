@@ -12,6 +12,9 @@
         android:roundIcon="@drawable/pharmamobil_mark"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <meta-data
+            android:name="pe.edu.upeu.pharmamobile.API_BASE_URL"
+            android:value="${apiBaseUrl}" />
         <activity
             android:exported="true"
             android:name=".MainActivity">
